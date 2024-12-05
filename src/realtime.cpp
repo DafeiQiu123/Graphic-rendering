@@ -80,33 +80,29 @@ void Realtime::finish() {
 
     // Final Project
     glDeleteTextures(1,&m_cube_texture);
-    m_basicMapFile.clear();
+    m_allObjects.clear();
     this->doneCurrent();
 }
 
-void Realtime::bindTexture(){
-    glGenTextures(1,&m_cube_texture);
-    glBindTexture(GL_TEXTURE_2D, m_cube_texture);
-    std::string filepathString = "scenefiles/action/extra_credit/textures/bark.png";
-    QString filepath = QString(filepathString.c_str());
-    std::cout << "update texture " << filepath.toStdString() << std::endl;
-    m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_cube_texture_image.width(),
-                 m_cube_texture_image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,m_cube_texture_image.bits());
+void Realtime::bindTexture(GLuint& textureID, QImage* image){
+    glGenTextures(1,&textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width(),
+                 image->height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,image->bits());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D,0);
 }
 
 bool Realtime::mapGeneratingFunction(glm::vec3 xyz){
-    if (xyz.x + xyz.y + xyz.z > 5) return false;
+    if (xyz.y > xyz.x + xyz.z) return false;
     return true;
 }
 
 void Realtime::createMap(){
-    for (int x = 0; x < 5; x++){
-        for (int y = 0; y < 5; y++){
-            for (int z = 0; z < 5; z++){
+    for (int z = 0; z < 5; z++){
+        for (int y = 0; y < 9; y++){
+            for (int x = 0; x < 5; x++){
                 if(!mapGeneratingFunction(glm::vec3(x,y,z))) continue;
                 basicMapFile oneCube;
                 glm::vec3 translate = glm::vec3(float(x),float(y),float(z));
@@ -118,7 +114,7 @@ void Realtime::createMap(){
                                     * glm::scale(glm::mat4(1.0f), scale);
                 oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
                 oneCube.textureID = m_cube_texture;
-                oneCube.basicMapvao = m_cube_vbo;
+                oneCube.vbo = m_cube_vbo;
                 oneCube.objectType = 0;
                 oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
                 oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
@@ -126,10 +122,32 @@ void Realtime::createMap(){
                 oneCube.material.shininess = 5;
                 oneCube.material.blend = 1;
                 oneCube.material.textureMap.isUsed = true;
-                m_basicMapFile.push_back(oneCube);
+                m_allObjects.push_back(oneCube);
             }
         }
     }
+}
+
+void Realtime::createMainCharacter(){
+    basicMapFile mainCha;
+    glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
+    glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
+    float angle = 0;
+    glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);
+    mainCha.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
+                          * glm::rotate(glm::mat4(1.0f), angle, rotate)
+                          * glm::scale(glm::mat4(1.0f), scale);
+    mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
+    mainCha.textureID = m_mainCha_texture;
+    mainCha.vbo = m_sphere_vbo;
+    mainCha.objectType = 1;
+    mainCha.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
+    mainCha.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
+    mainCha.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
+    mainCha.material.shininess = 5;
+    mainCha.material.blend = 1;
+    mainCha.material.textureMap.isUsed = true;
+    m_allObjects.push_back(mainCha);
 }
 
 void Realtime::initializeGL() {
@@ -190,13 +208,23 @@ void Realtime::initializeGL() {
     // makeShadowFBO();
 
     // Final Project
-    bindTexture();
+    std::string filepathString = "scenefiles/action/extra_credit/textures/bark.png";
+    QString filepath = QString(filepathString.c_str());
+    std::cout << "update texture " << filepath.toStdString() << std::endl;
+    m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
+    bindTexture(m_cube_texture, &m_cube_texture_image);
+    std::string filepathString2 = "scenefiles/action/extra_credit/textures/liqmtl.png";
+    QString filepath2 = QString(filepathString2.c_str());
+    std::cout << "update texture " << filepath2.toStdString() << std::endl;
+    m_mainCha_texture_image = QImage(filepath2).convertToFormat(QImage::Format_RGBA8888).mirrored();
+    bindTexture(m_mainCha_texture, &m_mainCha_texture_image);
     createMap();
+    createMainCharacter();
 }
 
 void Realtime::paintBasicMap(){
     // added in paintGL, when m_shader is used;
-    for (auto oneCube : m_basicMapFile){
+    for (basicMapFile& oneCube : m_allObjects){
         GLint modelLoc = glGetUniformLocation(m_shader, "modelMatrix");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &oneCube.modelMatrix[0][0]);
         GLint inverseModelLoc = glGetUniformLocation(m_shader, "inverseModelMatrix");
@@ -219,9 +247,13 @@ void Realtime::paintBasicMap(){
         glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
         GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
         glUniform1i(samplerLoc, 0);
-
-        glBindVertexArray(m_cube_vao);
-        glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
+        if (oneCube.objectType == 0){
+            glBindVertexArray(m_cube_vao);
+            glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
+        } else if (oneCube.objectType == 1){
+            glBindVertexArray(m_sphere_vao);
+            glDrawArrays(GL_TRIANGLES,0,m_sphere->generateShape().size()/8);
+        }
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }

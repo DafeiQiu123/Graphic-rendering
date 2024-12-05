@@ -25,7 +25,7 @@ struct basicMapFile{
     glm::mat4 modelMatrix;
     glm::mat4 inverseModelMatrix;
     int objectType;
-    GLuint basicMapvao;
+    GLuint vbo;
     GLuint textureID;
     SceneMaterial material;
 };
@@ -131,11 +131,14 @@ private:
     void makeShadowFBO();
 
     // Final Project
-    std::vector<basicMapFile> m_basicMapFile;
+    std::vector<basicMapFile> m_allObjects;
     GLuint m_cube_texture;
-    void bindTexture();
-    void createMap();
+    GLuint m_mainCha_texture;
+    QImage m_mainCha_texture_image;
     QImage m_cube_texture_image;
+    void bindTexture(GLuint& textureID, QImage* image);
+    void createMap();
+    void createMainCharacter();
     bool mapGeneratingFunction(glm::vec3 xyz);
     void paintBasicMap();
 

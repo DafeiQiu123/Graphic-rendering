@@ -9,6 +9,7 @@
 #include <utils/sceneparser.h>
 #include <utils/shaderloader.h>
 #include <camera/camera.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 // ================== Project 5: Lights, Camera
 
@@ -25,9 +26,26 @@ Realtime::Realtime(QWidget *parent)
     m_keyMap[Qt::Key_D]       = false;
     m_keyMap[Qt::Key_Control] = false;
     m_keyMap[Qt::Key_Space]   = false;
+    m_keyMap[Qt::Key_J] = false; // jump function
+    // sphere move
+    m_keyMap[Qt::Key_T] = false;
+    m_keyMap[Qt::Key_F] = false;
+    m_keyMap[Qt::Key_G] = false;
+    m_keyMap[Qt::Key_J] = false;
 
     // If you must use this function, do not edit anything above this
     m_camera = Camera();
+
+    // Initialize your new member variables here
+    m_sphereY = 0.0f;
+    m_sphereVelocityY = 0.0f;
+    m_isJumping = false;
+    m_sphereOriginalCTM = glm::mat4(1.0f); // Initialize to identity matrix
+    m_sphereShape = nullptr;
+    m_sphereX = 0.0f; // Horizontal position along X-axis
+    m_sphereZ = 0.0f; // Horizontal position along Z-axis
+    m_sphereSpeed = 5.0f;
+
 }
 
 void Realtime::finish() {
@@ -450,6 +468,12 @@ void Realtime::sceneChanged() {
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
         }
+        if (shape.primitive.type == PrimitiveType::PRIMITIVE_SPHERE) {
+            m_sphereOriginalCTM = shape.ctm;
+            m_sphereShape = &shape;
+            break; // Assuming there's only one sphere
+        }
+
     }
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();
@@ -557,6 +581,11 @@ void Realtime::settingsChanged() {
 
 void Realtime::keyPressEvent(QKeyEvent *event) {
     m_keyMap[Qt::Key(event->key())] = true;
+    if (event->key() == Qt::Key_J && !m_isJumping) {
+        m_isJumping = true;
+        m_sphereVelocityY = 5.0f; // Initial upward velocity (adjust as needed)
+    }
+
 }
 
 void Realtime::keyReleaseEvent(QKeyEvent *event) {
@@ -611,13 +640,55 @@ void Realtime::timerEvent(QTimerEvent *event) {
     if (m_keyMap[Qt::Key_D]) movement += right * movementSpeed * deltaTime;
     if (m_keyMap[Qt::Key_Space]) movement += glm::vec3(0.f,1.f,0.f) * movementSpeed * deltaTime;
     if (m_keyMap[Qt::Key_Control]) movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
+
+
     m_camera.updateTranslation(movement);
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();
     GLint viewLoc = glGetUniformLocation(m_shader, "viewMatrix");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &viewMatrix[0][0]);
     glUseProgram(0);
-    update(); // asks for a PaintGL() call to occur
+    // Sphere movement and jumping
+    if (m_sphereShape != nullptr) {
+        // Horizontal movement
+        glm::vec3 sphereMovement(0.0f);
+        if (m_keyMap[Qt::Key_T]) sphereMovement += glm::vec3(0, 0, -1); // Forward
+        if (m_keyMap[Qt::Key_G]) sphereMovement += glm::vec3(0, 0, 1);  // Backward
+        if (m_keyMap[Qt::Key_F]) sphereMovement += glm::vec3(-1, 0, 0); // Left
+        if (m_keyMap[Qt::Key_H]) sphereMovement += glm::vec3(1, 0, 0);  // Right
+
+        // Normalize and apply movement
+        if (glm::length(sphereMovement) > 0.0f) {
+            sphereMovement = glm::normalize(sphereMovement);
+            sphereMovement *= m_sphereSpeed * deltaTime;
+            m_sphereX += sphereMovement.x;
+            m_sphereZ += sphereMovement.z;
+        }
+
+        // Vertical movement (jumping)
+        if (m_isJumping) {
+            const float gravity = -9.8f; // Adjust as needed
+            m_sphereVelocityY += gravity * deltaTime;
+            m_sphereY += m_sphereVelocityY * deltaTime;
+
+            if (m_sphereY <= 0.0f) {
+                m_sphereY = 0.0f;
+                m_sphereVelocityY = 0.0f;
+                m_isJumping = false;
+            }
+        }
+
+        // Update the sphere's transformation matrix
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_sphereX, m_sphereY, m_sphereZ));
+        m_sphereShape->ctm = translation * m_sphereOriginalCTM;
+        m_sphereShape->inverseCTM = glm::inverse(m_sphereShape->ctm);
+
+        // Request a repaint to update the scene
+        update();
+    }
+
+
+
 }
 
 // DO NOT EDIT

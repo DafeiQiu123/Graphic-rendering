@@ -153,4 +153,17 @@ private:
     GLuint m_shadow_shader;
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
+    // Add the new member variables for jumping
+    float m_sphereY;                   // Vertical position of the sphere
+    float m_sphereVelocityY;           // Vertical velocity of the sphere
+    bool m_isJumping;                  // Is the sphere currently jumping?
+    glm::mat4 m_sphereOriginalCTM;     // Original transformation matrix of the sphere
+    RenderShapeData* m_sphereShape;    // Pointer to the sphere's shape data
+
+    float m_sphereX; // Horizontal position along X-axis
+    float m_sphereZ; // Horizontal position along Z-axis
+    float m_sphereSpeed;
+
+
+
 };

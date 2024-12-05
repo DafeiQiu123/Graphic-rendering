@@ -9,6 +9,7 @@
 #include <utils/sceneparser.h>
 #include <utils/shaderloader.h>
 #include <camera/camera.h>
+#include <glm/gtx/transform.hpp>
 
 // ================== Project 5: Lights, Camera
 
@@ -45,24 +46,6 @@ void Realtime::finish() {
     glDeleteBuffers(1, &m_cylinder_vbo);
     glDeleteProgram(m_shader);
 
-    // for extra credit Adaptive level of detail
-    glDeleteVertexArrays(1, &m_cube_vao_half);
-    glDeleteBuffers(1, &m_cube_vbo_half);
-    glDeleteVertexArrays(1, &m_sphere_vao_half);
-    glDeleteBuffers(1, &m_sphere_vbo_half);
-    glDeleteVertexArrays(1, &m_cone_vao_half);
-    glDeleteBuffers(1, &m_cone_vbo_half);
-    glDeleteVertexArrays(1, &m_cylinder_vao_half);
-    glDeleteBuffers(1, &m_cylinder_vbo_half);
-    glDeleteVertexArrays(1, &m_cube_vao_min);
-    glDeleteBuffers(1, &m_cube_vbo_min);
-    glDeleteVertexArrays(1, &m_sphere_vao_min);
-    glDeleteBuffers(1, &m_sphere_vbo_min);
-    glDeleteVertexArrays(1, &m_cone_vao_min);
-    glDeleteBuffers(1, &m_cone_vbo_min);
-    glDeleteVertexArrays(1, &m_cylinder_vao_min);
-    glDeleteBuffers(1, &m_cylinder_vbo_min);
-
     // for extra credit Mesh Rendering
     glDeleteVertexArrays(1, &m_mesh_vao);
     glDeleteBuffers(1, &m_mesh_vbo);
@@ -88,51 +71,65 @@ void Realtime::finish() {
     }
 
     // Project 6 extra credit shadow
-    glDeleteProgram(m_shadow_shader);
-    for (auto map : m_shadowMaps){
-        glDeleteTextures(1,&map.depthMap);
-        glDeleteFramebuffers(1, &map.depthMapFBO);
-    }
-    m_shadowMaps.clear();
+    // glDeleteProgram(m_shadow_shader);
+    // for (auto map : m_shadowMaps){
+    //     glDeleteTextures(1,&map.depthMap);
+    //     glDeleteFramebuffers(1, &map.depthMapFBO);
+    // }
+    // m_shadowMaps.clear();
+
+    // Final Project
+    glDeleteTextures(1,&m_cube_texture);
+    m_basicMapFile.clear();
     this->doneCurrent();
 }
 
-void Realtime::updateVaoVbo(int p1, int p2){
-    m_cube->updateParams(p1);
-    m_sphere->updateParams(p1,p2);
-    m_cone->updateParams(p1,p2);
-    m_cylinder->updateParams(p1,p2);
-
-    glBindVertexArray(m_cube_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_cube_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_cube->generateShape().size()*sizeof(GLfloat),m_cube->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindVertexArray(m_sphere_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_sphere_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_sphere->generateShape().size()*sizeof(GLfloat),m_sphere->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindVertexArray(m_cone_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_cone_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_cone->generateShape().size()*sizeof(GLfloat),m_cone->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindVertexArray(m_cylinder_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_cylinder_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_cylinder->generateShape().size()*sizeof(GLfloat),m_cylinder->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindBuffer(GL_ARRAY_BUFFER,0);
-    glBindVertexArray(0);
+void Realtime::bindTexture(){
+    glGenTextures(1,&m_cube_texture);
+    glBindTexture(GL_TEXTURE_2D, m_cube_texture);
+    std::string filepathString = "scenefiles/action/extra_credit/textures/bark.png";
+    QString filepath = QString(filepathString.c_str());
+    std::cout << "update texture " << filepath.toStdString() << std::endl;
+    m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_cube_texture_image.width(),
+                 m_cube_texture_image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,m_cube_texture_image.bits());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D,0);
 }
-void Realtime::setVAO(){
-    glEnableVertexAttribArray(0);  // Attribute location 0 for vertex position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(0));
-    glEnableVertexAttribArray(1);  // Attribute location 1 for normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);  // Attribute location 1 for normal
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(6 * sizeof(GLfloat)));
+
+bool Realtime::mapGeneratingFunction(glm::vec3 xyz){
+    if (xyz.x + xyz.y + xyz.z > 5) return false;
+    return true;
+}
+
+void Realtime::createMap(){
+    for (int x = 0; x < 5; x++){
+        for (int y = 0; y < 5; y++){
+            for (int z = 0; z < 5; z++){
+                if(!mapGeneratingFunction(glm::vec3(x,y,z))) continue;
+                basicMapFile oneCube;
+                glm::vec3 translate = glm::vec3(float(x),float(y),float(z));
+                glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
+                float angle = 0;
+                glm::vec3 scale = glm::vec3(1.f,1.f,1.f);
+                oneCube.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
+                                    * glm::rotate(glm::mat4(1.0f), angle, rotate)
+                                    * glm::scale(glm::mat4(1.0f), scale);
+                oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
+                oneCube.textureID = m_cube_texture;
+                oneCube.basicMapvao = m_cube_vbo;
+                oneCube.objectType = 0;
+                oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
+                oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
+                oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
+                oneCube.material.shininess = 5;
+                oneCube.material.blend = 1;
+                oneCube.material.textureMap.isUsed = true;
+                m_basicMapFile.push_back(oneCube);
+            }
+        }
+    }
 }
 
 void Realtime::initializeGL() {
@@ -171,45 +168,7 @@ void Realtime::initializeGL() {
     glGenBuffers(1, &m_cone_vbo);
     glGenVertexArrays(1,&m_cylinder_vao);
     glGenBuffers(1, &m_cylinder_vbo);
-
-
-    // for extra credit Adaptive Level of Detal
-    // ==================================================================== set enableAdaptive
-    enableAdaptiveNumber = false;
-    enableAdaptiveDistance = false;
-    numberThreshold1 = 20;
-    numberThreshold2 = 50;
-    distanceThreshold1 = 10.f;
-    distanceThreshold2 = 50.f;
-    m_cube_half = new Cube();
-    m_sphere_half = new Sphere();
-    m_cone_half = new Cone();
-    m_cylinder_half = new Cylinder();
-    m_cube_min = new Cube();
-    m_sphere_min = new Sphere();
-    m_cone_min = new Cone();
-    m_cylinder_min = new Cylinder();
-    glGenVertexArrays(1,&m_cube_vao_half);
-    glGenBuffers(1, &m_cube_vbo_half);
-    glGenVertexArrays(1,&m_sphere_vao_half);
-    glGenBuffers(1, &m_sphere_vbo_half);
-    glGenVertexArrays(1,&m_cone_vao_half);
-    glGenBuffers(1, &m_cone_vbo_half);
-    glGenVertexArrays(1,&m_cylinder_vao_half);
-    glGenBuffers(1, &m_cylinder_vbo_half);
-
-    glGenVertexArrays(1,&m_cube_vao_min);
-    glGenBuffers(1, &m_cube_vbo_min);
-    glGenVertexArrays(1,&m_sphere_vao_min);
-    glGenBuffers(1, &m_sphere_vbo_min);
-    glGenVertexArrays(1,&m_cone_vao_min);
-    glGenBuffers(1, &m_cone_vbo_min);
-    glGenVertexArrays(1,&m_cylinder_vao_min);
-    glGenBuffers(1, &m_cylinder_vbo_min);
-
-    updateVaoVboHalf(settings.shapeParameter1/2, settings.shapeParameter2/2);
     updateVaoVbo(settings.shapeParameter1, settings.shapeParameter2);
-    updateVaoVboMin(1,1);
 
     // for extra credit mesh rendering
     m_mesh = new Mesh();
@@ -223,42 +182,50 @@ void Realtime::initializeGL() {
     glBindVertexArray(0);
 
     // project 6 action
-    //===================================================================== set filter, set defaultFBO
-    m_defaultFBO = 2;
-    m_pixelSwitch = 1; // if switch == 0, invert feature; if switch == 1, grayscale feature; if switch == 2, top mapping feature
-    m_kernelSwitch = 1; // if switch == 0, blur feature; if switch == 1, shapern feature; if switch == 3, edge detect feature
-    m_screen_width = size().width() * m_devicePixelRatio;
-    m_screen_height = size().height() * m_devicePixelRatio;
-    m_fbo_width = m_screen_width;
-    m_fbo_height = m_screen_height;
-    m_texture_shader = ShaderLoader::createShaderProgram(":/resources/shaders/screen.vert", ":/resources/shaders/screen.frag");
-    std::vector<GLfloat> fullscreen_quad_data =
-        { //     POSITIONS    //
-            -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
-            1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
-            1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
-            -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
-            1.0f, -1.0f, 0.0f,  1.0f, 0.0f
-        };
-    glGenBuffers(1, &m_fullscreen_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_fullscreen_vbo);
-    glBufferData(GL_ARRAY_BUFFER, fullscreen_quad_data.size()*sizeof(GLfloat), fullscreen_quad_data.data(), GL_STATIC_DRAW);
-    glGenVertexArrays(1, &m_fullscreen_vao);
-    glBindVertexArray(m_fullscreen_vao);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(0));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    makeFBO();
+    // set the screen FBO, set postprocess parameters
+    screenPostproSetup();
 
     // Project 6 extra credit shadow
     // m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
     // makeShadowFBO();
+
+    // Final Project
+    bindTexture();
+    createMap();
 }
 
+void Realtime::paintBasicMap(){
+    // added in paintGL, when m_shader is used;
+    for (auto oneCube : m_basicMapFile){
+        GLint modelLoc = glGetUniformLocation(m_shader, "modelMatrix");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &oneCube.modelMatrix[0][0]);
+        GLint inverseModelLoc = glGetUniformLocation(m_shader, "inverseModelMatrix");
+        glUniformMatrix4fv(inverseModelLoc, 1, GL_FALSE, &oneCube.inverseModelMatrix[0][0]);
+
+        const SceneMaterial& material = oneCube.material;
+        GLint ambientLoc = glGetUniformLocation(m_shader, "material.ambient");
+        GLint diffuseLoc = glGetUniformLocation(m_shader, "material.diffuse");
+        GLint specularLoc = glGetUniformLocation(m_shader, "material.specular");
+        GLint shininessLoc = glGetUniformLocation(m_shader, "material.shininess");
+        glUniform3fv(ambientLoc, 1, &material.cAmbient[0]);
+        glUniform3fv(diffuseLoc, 1, &material.cDiffuse[0]);
+        glUniform3fv(specularLoc, 1, &material.cSpecular[0]);
+        glUniform1f(shininessLoc, material.shininess);
+        GLint isTextureLoc = glGetUniformLocation(m_shader,"isTexture");
+        glUniform1i(isTextureLoc, 1);
+        GLint blendLoc = glGetUniformLocation(m_shader, "blend");
+        glUniform1f(blendLoc, material.blend);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
+        GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
+        glUniform1i(samplerLoc, 0);
+
+        glBindVertexArray(m_cube_vao);
+        glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
 void Realtime::paintGL() {
     // Students: anything requiring OpenGL calls every frame should be done here
     // Project 6 extra credit shadow mapping, bind the shadowfbo, lights to depthMap;
@@ -268,132 +235,11 @@ void Realtime::paintGL() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
+    // Final Project
+    paintBasicMap();
+    // Original Drawing for Project 5 and 6
+    // paintOriginal();
 
-    int adaptiveDetail = 0;
-    if (enableAdaptiveNumber) {
-        if (m_metaData.shapes.size() <= numberThreshold1) adaptiveDetail = 0;
-        else if (m_metaData.shapes.size() > numberThreshold2) adaptiveDetail = 2;
-        else adaptiveDetail = 1;
-    }
-    // passShadowMap();
-    for (const RenderShapeData& shape : m_metaData.shapes){
-
-        GLint modelLoc = glGetUniformLocation(m_shader, "modelMatrix");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &shape.ctm[0][0]);
-
-        GLint inverseModelLoc = glGetUniformLocation(m_shader, "inverseModelMatrix");
-        glUniformMatrix4fv(inverseModelLoc, 1, GL_FALSE, &shape.inverseCTM[0][0]);
-
-        const SceneMaterial& material = shape.primitive.material;
-        GLint ambientLoc = glGetUniformLocation(m_shader, "material.ambient");
-        GLint diffuseLoc = glGetUniformLocation(m_shader, "material.diffuse");
-        GLint specularLoc = glGetUniformLocation(m_shader, "material.specular");
-        GLint shininessLoc = glGetUniformLocation(m_shader, "material.shininess");
-        glUniform3fv(ambientLoc, 1, &material.cAmbient[0]);
-        glUniform3fv(diffuseLoc, 1, &material.cDiffuse[0]);
-        glUniform3fv(specularLoc, 1, &material.cSpecular[0]);
-        glUniform1f(shininessLoc, material.shininess);
-
-        if (enableAdaptiveDistance) {
-            glm::vec3 worldShapePos = glm::vec3(shape.ctm * glm::vec4(0.0f,0.0f,0.0f,1.0f));
-            float distance = glm::distance(glm::vec3(m_camera.getCameraPos()),worldShapePos);
-            std::cout << distance << std::endl;
-            if (distance <= distanceThreshold1) adaptiveDetail = 0;
-            else if (distance > distanceThreshold2) adaptiveDetail = 2;
-            else adaptiveDetail = 1;
-        }
-
-        // Project 6 texture related
-        GLint isTextureLoc = glGetUniformLocation(m_shader,"isTexture");
-        glUniform1i(isTextureLoc, material.textureMap.isUsed);
-        GLint blendLoc = glGetUniformLocation(m_shader, "blend");
-        glUniform1f(blendLoc, material.blend);
-        if (material.textureMap.isUsed) {
-            // Activate texture unit 0
-            glActiveTexture(GL_TEXTURE0);
-            // Bind the texture
-            glBindTexture(GL_TEXTURE_2D, material.textureMap.textureID);
-            // Set the sampler uniform to use texture unit 0
-            GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
-            glUniform1i(samplerLoc, 0);
-        }
-
-        switch (shape.primitive.type){
-            case PrimitiveType::PRIMITIVE_CUBE:
-                switch (adaptiveDetail){
-                    case 0:
-                        glBindVertexArray(m_cube_vao);
-                        glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
-                        break;
-                    case 1:
-                        glBindVertexArray(m_cube_vao_half);
-                        glDrawArrays(GL_TRIANGLES,0,m_cube_half->generateShape().size()/8);
-                        break;
-                    case 2:
-                        glBindVertexArray(m_cube_vao_min);
-                        glDrawArrays(GL_TRIANGLES,0,m_cube_min->generateShape().size()/8);
-                        break;
-                    }
-                break;
-            case PrimitiveType::PRIMITIVE_SPHERE:
-                switch (adaptiveDetail){
-                case 0:
-                    glBindVertexArray(m_sphere_vao);
-                    glDrawArrays(GL_TRIANGLES,0,m_sphere->generateShape().size()/8);
-                    break;
-                case 1:
-                    glBindVertexArray(m_sphere_vao_half);
-                    glDrawArrays(GL_TRIANGLES,0,m_sphere_half->generateShape().size()/8);
-                    break;
-                case 2:
-                    glBindVertexArray(m_sphere_vao_min);
-                    glDrawArrays(GL_TRIANGLES,0,m_sphere_min->generateShape().size()/8);
-                    break;
-                }
-                break;
-            case PrimitiveType::PRIMITIVE_CONE:
-                switch (adaptiveDetail){
-                case 0:
-                    glBindVertexArray(m_cone_vao);
-                    glDrawArrays(GL_TRIANGLES,0,m_cone->generateShape().size()/8);
-                    break;
-                case 1:
-                    glBindVertexArray(m_cone_vao_half);
-                    glDrawArrays(GL_TRIANGLES,0,m_cone_half->generateShape().size()/8);
-                    break;
-                case 2:
-                    glBindVertexArray(m_cone_vao_min);
-                    glDrawArrays(GL_TRIANGLES,0,m_cone_min->generateShape().size()/8);
-                    break;
-                }
-                break;
-            case PrimitiveType::PRIMITIVE_CYLINDER:
-                switch (adaptiveDetail){
-                case 0:
-                    glBindVertexArray(m_cylinder_vao);
-                    glDrawArrays(GL_TRIANGLES,0,m_cylinder->generateShape().size()/8);
-                    break;
-                case 1:
-                    glBindVertexArray(m_cylinder_vao_half);
-                    glDrawArrays(GL_TRIANGLES,0,m_cylinder_half->generateShape().size()/8);
-                    break;
-                case 2:
-                    glBindVertexArray(m_cylinder_vao_min);
-                    glDrawArrays(GL_TRIANGLES,0,m_cylinder_min->generateShape().size()/8);
-                    break;
-                }
-                break;
-            case PrimitiveType::PRIMITIVE_MESH:
-                glBindVertexArray(m_mesh_vao);
-                glDrawArrays(GL_TRIANGLES, 0, m_mesh->getVertexData().size() / 8);
-                break;
-        }
-
-        if (material.textureMap.isUsed) {
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-    }
-    glBindVertexArray(0);
     glUseProgram(0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
@@ -430,27 +276,6 @@ void Realtime::sceneChanged() {
     if (!success) std::cout << "parsing failed";
     m_camera = Camera(m_metaData.cameraData,width(),height());
     m_camera.updateNearFar(0.1f,100.0f);
-    for (RenderShapeData& shape : m_metaData.shapes) {
-        if (shape.primitive.material.textureMap.isUsed){
-            glGenTextures(1,&(shape.primitive.material.textureMap.textureID));
-            glBindTexture(GL_TEXTURE_2D, shape.primitive.material.textureMap.textureID);
-            QImage* image = &shape.primitive.material.textureMap.textureImage;
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width(), image->height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,image->bits());
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-            glBindTexture(GL_TEXTURE_2D,0);
-        }
-        if (shape.primitive.type == PrimitiveType::PRIMITIVE_MESH) {
-            std::string meshFile = shape.primitive.meshfile;
-            m_mesh->loadOBJ(meshFile);
-            glBindVertexArray(m_mesh_vao);
-            glBindBuffer(GL_ARRAY_BUFFER, m_mesh_vbo);
-            glBufferData(GL_ARRAY_BUFFER, m_mesh->getVertexData().size() * sizeof(float),m_mesh->getVertexData().data(), GL_STATIC_DRAW);
-            setVAO();
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-        }
-    }
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();
     glm::mat4 projectionMatrix = m_camera.getProjectionMatrix();
@@ -541,9 +366,6 @@ void Realtime::settingsChanged() {
     }
     if (settings.shapeParameter1 != preP1 || settings.shapeParameter2 != preP2){
         if (m_sphere) updateVaoVbo(settings.shapeParameter1,settings.shapeParameter2);
-        // for extra credit Adaptive Detail
-        if (m_sphere_half) updateVaoVboHalf(settings.shapeParameter1/2, settings.shapeParameter2/2);
-        if (m_sphere_min) updateVaoVboMin(1,1);
         preP1 = settings.shapeParameter1;
         preP2 = settings.shapeParameter2;
 

@@ -20,8 +20,6 @@ private:
                   glm::vec3 topRight,
                   glm::vec3 bottomLeft,
                   glm::vec3 bottomRight);
-    void addUV(std::vector<float> &data, glm::vec3 p);
-
     std::vector<float> m_vertexData;
     int m_param1;
 };

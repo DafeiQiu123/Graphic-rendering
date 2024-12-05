@@ -27,10 +27,12 @@ include_directories(src)
 add_executable(${PROJECT_NAME}
     src/main.cpp
 
+
     src/realtime.cpp
     src/mainwindow.cpp
     src/settings.cpp
-    src/adaptive.cpp
+    src/drawOriginal.cpp
+    src/bindShapeVAOVBO.cpp
     src/utils/scenefilereader.cpp
     src/utils/sceneparser.cpp
     src/camera/camera.cpp

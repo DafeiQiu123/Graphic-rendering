@@ -10,6 +10,37 @@
 #include <utils/shaderloader.h>
 #include <camera/camera.h>
 
+void Realtime::screenPostproSetup(){
+    m_defaultFBO = 2;
+    m_pixelSwitch = 1; // if switch == 0, invert feature; if switch == 1, grayscale feature; if switch == 2, tone mapping feature
+    m_kernelSwitch = 1; // if switch == 0, blur feature; if switch == 1, shapern feature; if switch == 3, edge detect feature
+    m_screen_width = size().width() * m_devicePixelRatio;
+    m_screen_height = size().height() * m_devicePixelRatio;
+    m_fbo_width = m_screen_width;
+    m_fbo_height = m_screen_height;
+    m_texture_shader = ShaderLoader::createShaderProgram(":/resources/shaders/screen.vert", ":/resources/shaders/screen.frag");
+    std::vector<GLfloat> fullscreen_quad_data =
+        { //     POSITIONS    //
+            -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+            1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+            1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+            1.0f, -1.0f, 0.0f,  1.0f, 0.0f
+        };
+    glGenBuffers(1, &m_fullscreen_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, m_fullscreen_vbo);
+    glBufferData(GL_ARRAY_BUFFER, fullscreen_quad_data.size()*sizeof(GLfloat), fullscreen_quad_data.data(), GL_STATIC_DRAW);
+    glGenVertexArrays(1, &m_fullscreen_vao);
+    glBindVertexArray(m_fullscreen_vao);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    makeFBO();
+}
 void Realtime::makeFBO(){
     glGenTextures(1, &m_fbo_texture);
     glActiveTexture(GL_TEXTURE0);

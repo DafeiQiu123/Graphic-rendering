@@ -20,6 +20,16 @@
 #include "shapes/Cylinder.h"
 #include "shapes/Cone.h"
 #include "shapes/Mesh.h"
+//Final Project
+struct basicMapFile{
+    glm::mat4 modelMatrix;
+    glm::mat4 inverseModelMatrix;
+    int objectType;
+    GLuint basicMapvao;
+    GLuint textureID;
+    SceneMaterial material;
+};
+
 struct ShadowMap {
     GLuint depthMapFBO;
     GLuint depthMap;
@@ -34,13 +44,6 @@ public:
     void sceneChanged();
     void settingsChanged();
     void saveViewportImage(std::string filePath);
-    void setVAO();
-    void renderShadowMap();
-    void passShadowMap();
-    void updateVaoVbo(int p1, int p2);
-    void updateVaoVboHalf(int p1, int p2);
-    void updateVaoVboMin(int p1, int p2);
-    void makeShadowFBO();
 
 public slots:
     void tick(QTimerEvent* event);                      // Called once per tick of m_timer
@@ -90,39 +93,9 @@ private:
     float preNear = 0.1f;
     float preFar = 100.0f;
     int preP1,preP2 = 5;
-    // For extra credit adaptive level of detail
-    bool enableAdaptiveNumber = false;
-    bool enableAdaptiveDistance = false;
-
-    int numberThreshold1 = 50;
-    int numberThreshold2 = 100;
-    float distanceThreshold1 = 50.f;
-    float distanceThreshold2 = 100.f;
-    Cube* m_cube_half = nullptr;
-    Sphere* m_sphere_half = nullptr;
-    Cylinder* m_cylinder_half = nullptr;
-    Cone* m_cone_half = nullptr;
-    GLuint m_cube_vbo_half;
-    GLuint m_sphere_vbo_half;
-    GLuint m_cylinder_vbo_half;
-    GLuint m_cone_vbo_half;
-    GLuint m_cube_vao_half;
-    GLuint m_sphere_vao_half;
-    GLuint m_cylinder_vao_half;
-    GLuint m_cone_vao_half;
-    Cube* m_cube_min = nullptr;
-    Sphere* m_sphere_min = nullptr;
-    Cylinder* m_cylinder_min = nullptr;
-    Cone* m_cone_min = nullptr;
-    GLuint m_shader_min;
-    GLuint m_cube_vbo_min;
-    GLuint m_sphere_vbo_min;
-    GLuint m_cylinder_vbo_min;
-    GLuint m_cone_vbo_min;
-    GLuint m_cube_vao_min;
-    GLuint m_sphere_vao_min;
-    GLuint m_cylinder_vao_min;
-    GLuint m_cone_vao_min;
+    void paintOriginal();
+    void updateVaoVbo(int p1, int p2);
+    void setVAO();
 
     // For extra credit mesh rendering
     GLuint m_mesh_vao;
@@ -130,6 +103,7 @@ private:
     Mesh* m_mesh = nullptr;
 
     // Project 6 action
+    void screenPostproSetup();
     void makeFBO();
     // Task 30: Update the paintTexture function signature
     void paintTexture(GLuint texture);
@@ -148,9 +122,21 @@ private:
     GLuint m_fbo_texture;
     GLuint m_fbo_renderbuffer;
 
-    // Project 6 extra credit
+    // Project 6 extra credit shadowMap
     std::vector<ShadowMap> m_shadowMaps;
     GLuint m_shadow_shader;
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    void renderShadowMap();
+    void passShadowMap();
+    void makeShadowFBO();
+
+    // Final Project
+    std::vector<basicMapFile> m_basicMapFile;
+    GLuint m_cube_texture;
+    void bindTexture();
+    void createMap();
+    QImage m_cube_texture_image;
+    bool mapGeneratingFunction(glm::vec3 xyz);
+    void paintBasicMap();
 
 };

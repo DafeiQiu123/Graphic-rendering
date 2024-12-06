@@ -80,6 +80,8 @@ void Realtime::finish() {
 
     // Final Project
     glDeleteTextures(1,&m_cube_texture);
+    glDeleteTextures(1,&m_mainCha_texture);
+    glDeleteTextures(1, &m_background_texture);
     m_allObjects.clear();
     this->doneCurrent();
 }
@@ -115,6 +117,7 @@ void Realtime::createMap(){
                 oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
                 oneCube.textureID = m_cube_texture;
                 oneCube.vbo = m_cube_vbo;
+                oneCube.vao = m_cube_vao;
                 oneCube.objectType = 0;
                 oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
                 oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
@@ -128,6 +131,29 @@ void Realtime::createMap(){
     }
 }
 
+void Realtime::createBackground(){
+    basicMapFile background;
+    glm::vec3 translate = glm::vec3(float(20),float(0),float(20));
+    glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
+    float angle = glm::radians(45.0f);
+    glm::vec3 scale = glm::vec3(50,50,0.01);
+    background.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
+                          * glm::rotate(glm::mat4(1.0f), angle, rotate)
+                          * glm::scale(glm::mat4(1.0f), scale);
+    background.inverseModelMatrix = glm::inverse(background.modelMatrix);
+    background.textureID = m_background_texture;
+    background.vbo = m_cube_vbo;
+    background.vao = m_cube_vao;
+    background.objectType = 1;
+    background.material.cAmbient = glm::vec4(0.0f);
+    background.material.cDiffuse = glm::vec4(0.1,0.1,0.1,0);
+    background.material.cSpecular = glm::vec4(0.0f);
+    background.material.shininess = 5;
+    background.material.blend = 1;
+    background.material.textureMap.isUsed = true;
+    m_mainChaOriginalCTM = background.modelMatrix;
+    m_allObjects.push_back(background);
+}
 void Realtime::createMainCharacter(){
     basicMapFile mainCha;
     glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
@@ -140,6 +166,7 @@ void Realtime::createMainCharacter(){
     mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
     mainCha.textureID = m_mainCha_texture;
     mainCha.vbo = m_sphere_vbo;
+    mainCha.vao = m_sphere_vao;
     mainCha.objectType = 1;
     mainCha.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
     mainCha.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
@@ -147,6 +174,7 @@ void Realtime::createMainCharacter(){
     mainCha.material.shininess = 5;
     mainCha.material.blend = 1;
     mainCha.material.textureMap.isUsed = true;
+    m_mainChaOriginalCTM = mainCha.modelMatrix;
     m_allObjects.push_back(mainCha);
 }
 
@@ -208,17 +236,26 @@ void Realtime::initializeGL() {
     // makeShadowFBO();
 
     // Final Project
-    std::string filepathString = "scenefiles/action/extra_credit/textures/bark.png";
+    std::string filepathString = "asset/bark.png";
     QString filepath = QString(filepathString.c_str());
     std::cout << "update texture " << filepath.toStdString() << std::endl;
     m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_cube_texture, &m_cube_texture_image);
-    std::string filepathString2 = "scenefiles/action/extra_credit/textures/liqmtl.png";
+
+    std::string filepathString2 = "asset/liqmtl.png";
     QString filepath2 = QString(filepathString2.c_str());
     std::cout << "update texture " << filepath2.toStdString() << std::endl;
     m_mainCha_texture_image = QImage(filepath2).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_mainCha_texture, &m_mainCha_texture_image);
+
+    std::string filepathString3 = "asset/star.png";
+    QString filepath3 = QString(filepathString3.c_str());
+    std::cout << "update texture " << filepath3.toStdString() << std::endl;
+    m_background_texture_image = QImage(filepath3).convertToFormat(QImage::Format_RGBA8888).mirrored();
+    bindTexture(m_background_texture, &m_background_texture_image);
+
     createMap();
+    createBackground();
     createMainCharacter();
 }
 
@@ -247,11 +284,11 @@ void Realtime::paintBasicMap(){
         glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
         GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
         glUniform1i(samplerLoc, 0);
-        if (oneCube.objectType == 0){
-            glBindVertexArray(m_cube_vao);
+        if (oneCube.objectType == 0 || oneCube.objectType == 2){
+            glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
         } else if (oneCube.objectType == 1){
-            glBindVertexArray(m_sphere_vao);
+            glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_sphere->generateShape().size()/8);
         }
         glBindVertexArray(0);
@@ -411,6 +448,10 @@ void Realtime::settingsChanged() {
 
 void Realtime::keyPressEvent(QKeyEvent *event) {
     m_keyMap[Qt::Key(event->key())] = true;
+    if (event->key() == Qt::Key_G && !m_mainChaJumping) {
+        m_mainChaJumping = true;
+        m_mainChaSpeedVertical = 5.0f; // Initial upward velocity (adjust as needed)
+    }
 }
 
 void Realtime::keyReleaseEvent(QKeyEvent *event) {
@@ -471,6 +512,40 @@ void Realtime::timerEvent(QTimerEvent *event) {
     GLint viewLoc = glGetUniformLocation(m_shader, "viewMatrix");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &viewMatrix[0][0]);
     glUseProgram(0);
+    if (m_allObjects.size() != 0){
+        auto& mainCha = m_allObjects.back();
+        glm::vec3 sphereMovement(0.0f);
+        if (m_keyMap[Qt::Key_I]) sphereMovement += glm::vec3(0, 0, 1); // Forward
+        if (m_keyMap[Qt::Key_K]) sphereMovement += glm::vec3(0, 0, -1);  // Backward
+        if (m_keyMap[Qt::Key_J]) sphereMovement += glm::vec3(1, 0, 0); // Left
+        if (m_keyMap[Qt::Key_L]) sphereMovement += glm::vec3(-1, 0, 0);  // Right
+
+        // Normalize and apply movement
+        if (glm::length(sphereMovement) > 0.0f) {
+            sphereMovement = glm::normalize(sphereMovement);
+            sphereMovement *= m_mainChaSpeedHorizontal * deltaTime;
+            m_mainChaX += sphereMovement.x;
+            m_mainChaZ += sphereMovement.z;
+        }
+
+        // Vertical movement (jumping)
+        if (m_mainChaJumping) {
+            const float gravity = -9.8f; // Adjust as needed
+            m_mainChaSpeedVertical += gravity * deltaTime;
+            m_mainChaY += m_mainChaSpeedVertical * deltaTime;
+
+            if (m_mainChaY <= 0.0f) {
+                m_mainChaY = 0.0f;
+                m_mainChaSpeedVertical = 0.0f;
+                m_mainChaJumping = false;
+            }
+        }
+
+        //Update the sphere's transformation matrix
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));
+        mainCha.modelMatrix = translation * m_mainChaOriginalCTM;
+        mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
+    }
     update(); // asks for a PaintGL() call to occur
 }
 

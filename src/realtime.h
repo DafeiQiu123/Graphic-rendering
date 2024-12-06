@@ -21,6 +21,14 @@
 #include "shapes/Cone.h"
 #include "shapes/Mesh.h"
 //Final Project
+
+struct hitBox{
+    glm::vec3 hitBoxA;
+    glm::vec3 hitBoxB;
+    glm::vec3 cood;
+};
+
+
 struct basicMapFile{
     glm::mat4 modelMatrix;
     glm::mat4 inverseModelMatrix;
@@ -29,6 +37,7 @@ struct basicMapFile{
     GLuint vao;
     GLuint textureID;
     SceneMaterial material;
+    hitBox hitboxObj;
 };
 
 struct ShadowMap {
@@ -153,5 +162,10 @@ private:
     glm::mat4 m_mainChaOriginalCTM;
 
 
-
+    bool m_mapLayout[5][9][5];
+    bool checkCollision(const glm::vec3& position, float radius);
+    bool checkBoxSphereCollision(const glm::vec3& sphereCenter, float sphereRadius,
+                                 const glm::vec3& boxMin, const glm::vec3& boxMax);
+    void initializeMapLayout();
+    bool isOnGround(const glm::vec3& position, float radius);
 };

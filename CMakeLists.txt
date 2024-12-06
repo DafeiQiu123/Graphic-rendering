@@ -60,6 +60,7 @@ add_executable(${PROJECT_NAME}
     src/shapes/Cylinder.h
     src/shapes/Cone.h
     src/shapes/Mesh.h
+    src/collision.cpp
 
 )
 

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdexcept>
 #include "camera.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -117,6 +118,10 @@ void Camera::updateRotation(float deltaX, float deltaY) {
     m_cameraData.look = glm::normalize(glm::vec4(rotateX * rotateY * glm::vec3(m_cameraData.look), 0.f));
     m_cameraData.up = glm::normalize(glm::vec4(rotateX * rotateY * glm::vec3(m_cameraData.up), 0.f));
     m_right = glm::normalize(glm::cross(glm::vec3(m_cameraData.look),glm::vec3(m_cameraData.up)));
+
+    // std::cout<<m_cameraData.look.x<<"===="<<m_cameraData.look.y<<"==="<<m_cameraData.look.z<<"===||";
+
+    // std::cout<<m_cameraData.up.x<<"===="<<m_cameraData.up.y<<"==="<<m_cameraData.up.z<<"===||";
     return;
 }
 

@@ -122,7 +122,7 @@ void Realtime::createMap(){
                 oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
                 oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
                 oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
-                oneCube.material.shininess = 5;
+                oneCube.material.shininess = 1;
                 oneCube.material.blend = 1;
                 oneCube.material.textureMap.isUsed = true;
                 m_allObjects.push_back(oneCube);
@@ -505,7 +505,10 @@ void Realtime::timerEvent(QTimerEvent *event) {
     if (m_keyMap[Qt::Key_A]) movement -= right * movementSpeed * deltaTime;
     if (m_keyMap[Qt::Key_D]) movement += right * movementSpeed * deltaTime;
     if (m_keyMap[Qt::Key_Space]) movement += glm::vec3(0.f,1.f,0.f) * movementSpeed * deltaTime;
-    if (m_keyMap[Qt::Key_Control]) movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
+    if (m_keyMap[Qt::Key_Control]){
+        movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
+        // std::cout<<m_camera.getCameraPos().x<<"===="<<m_camera.getCameraPos().y<<"==="<<m_camera.getCameraPos().z<<"===";
+    }
     m_camera.updateTranslation(movement);
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();

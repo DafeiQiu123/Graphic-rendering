@@ -1,0 +1,152 @@
+{
+  
+  "name": "default",
+  "globalData": {
+    "ambientCoeff": 1,
+    "diffuseCoeff": 1,
+    "specularCoeff": 1,
+    "transparentCoeff": 0
+  },
+  "cameraData": {
+    "position": [
+      0,
+      0,
+      5
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "heightAngle": 45,
+    "look": [
+      0,
+      0,
+      -1
+    ]
+  },
+  "groups": [
+    {
+      "name": "Lights",
+      "lights": [
+        {
+          "type": "directional",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "direction": [
+            0,
+            1,
+            0.56
+          ],
+          
+          "penumbra": 0,
+          "angle": 0,
+          "attenuationCoeff": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "directional",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "direction": [
+            1,
+            0,
+            1
+          ],
+          
+          "penumbra": 0,
+          "angle": 0,
+          "attenuationCoeff": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "directional",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "direction": [
+            0,
+            1,
+            1
+          ],
+          
+          "penumbra": 0,
+          "angle": 0,
+          "attenuationCoeff": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "directional",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "direction": [
+            1,
+            1,
+            0
+          ],
+          
+          "penumbra": 0,
+          "angle": 0,
+          "attenuationCoeff": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "directional",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "direction": [
+            1,
+            1,
+            0.9
+          ],
+          
+          "penumbra": 0,
+          "angle": 0,
+          "attenuationCoeff": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "translate": [
+        1.2,
+        2.98,
+        1.24
+      ],
+      
+      "rotate": [
+        0,
+        13,
+        8,
+        56
+      ]
+    }
+  ]
+}

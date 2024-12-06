@@ -26,6 +26,7 @@ struct basicMapFile{
     glm::mat4 inverseModelMatrix;
     int objectType;
     GLuint vbo;
+    GLuint vao;
     GLuint textureID;
     SceneMaterial material;
 };
@@ -134,6 +135,8 @@ private:
     std::vector<basicMapFile> m_allObjects;
     GLuint m_cube_texture;
     GLuint m_mainCha_texture;
+    GLuint m_background_texture;
+    QImage m_background_texture_image;
     QImage m_mainCha_texture_image;
     QImage m_cube_texture_image;
     void bindTexture(GLuint& textureID, QImage* image);
@@ -141,5 +144,14 @@ private:
     void createMainCharacter();
     bool mapGeneratingFunction(glm::vec3 xyz);
     void paintBasicMap();
+    void createBackground();
+    // main character movement
+    float m_mainChaX,m_mainChaY,m_mainChaZ = 0.0f;
+    bool m_mainChaJumping = false;
+    float m_mainChaSpeedHorizontal = 5.0f;
+    float m_mainChaSpeedVertical = 5.0f;
+    glm::mat4 m_mainChaOriginalCTM;
+
+
 
 };

@@ -130,6 +130,8 @@ void Realtime::createMap(){
                 oneCube.hitboxObj.hitBoxB = translate + glm::vec3(0.5f);  // max bounds
                 oneCube.hitboxObj.cood = translate;
 
+                m_mapHitbox[x][y][z] = oneCube.hitboxObj;
+
                 m_allObjects.push_back(oneCube);
             }
         }
@@ -161,7 +163,7 @@ void Realtime::createBackground(){
 }
 void Realtime::createMainCharacter(){
     basicMapFile mainCha;
-    glm::vec3 translate = glm::vec3(float(0),float(2.75),float(0));
+    glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
     glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
     float angle = 0;
     glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);
@@ -532,80 +534,33 @@ void Realtime::timerEvent(QTimerEvent *event) {
         if (glm::length(sphereMovement) > 0.0f) {
             sphereMovement = glm::normalize(sphereMovement);
             sphereMovement *= m_mainChaSpeedHorizontal * deltaTime;
-            // m_mainChaX += sphereMovement.x;
-            // m_mainChaZ += sphereMovement.z;
+            m_mainChaX += sphereMovement.x;
+            m_mainChaZ += sphereMovement.z;
 
-            glm::vec3 newPosX(m_mainChaX + sphereMovement.x, m_mainChaY, m_mainChaZ);
-            glm::vec3 newPosZ(m_mainChaX, m_mainChaY, m_mainChaZ + sphereMovement.z);
-
-            // Try moving in X and Z directions separately
-            if (!checkCollision(newPosX, 0.25f)) {
-                m_mainChaX += sphereMovement.x;
-            }
-            if (!checkCollision(newPosZ, 0.25f)) {
-                m_mainChaZ += sphereMovement.z;
-            }
+            // glm::vec3 newPosX(m_mainChaX + sphereMovement.x, m_mainChaY, m_mainChaZ);
+            // glm::vec3 newPosZ(m_mainChaX, m_mainChaY, m_mainChaZ + sphereMovement.z);
         }
 
-        // Vertical movement (jumping)
+        const float gravity = -9.8f;
         if (m_mainChaJumping) {
-        //     const float gravity = -9.8f; // Adjust as needed
-        //     m_mainChaSpeedVertical += gravity * deltaTime;
-        //     m_mainChaY += m_mainChaSpeedVertical * deltaTime;
-
-        //     if (m_mainChaY <= 0.0f) {
-        //         m_mainChaY = 0.0f;
-        //         m_mainChaSpeedVertical = 0.0f;
-        //         m_mainChaJumping = false;
-        //     }
-            const float gravity = -9.8f;
             m_mainChaSpeedVertical += gravity * deltaTime;
+        }
 
-            // Test new vertical position
-            float newY = m_mainChaY + m_mainChaSpeedVertical * deltaTime;
-            glm::vec3 newPos(m_mainChaX, newY, m_mainChaZ);
+        m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
-            if (!checkCollision(newPos, 0.25f)) {
-                m_mainChaY = newY;
-            } else {
-                // If collision detected during upward movement, allow small sliding
-                if (m_mainChaSpeedVertical > 0) {
-                    // Try to find a nearby valid position
-                    const float slideOffset = 0.1f;
-                    glm::vec3 slidePositions[] = {
-                        glm::vec3(m_mainChaX + slideOffset, newY, m_mainChaZ),
-                        glm::vec3(m_mainChaX - slideOffset, newY, m_mainChaZ),
-                        glm::vec3(m_mainChaX, newY, m_mainChaZ + slideOffset),
-                        glm::vec3(m_mainChaX, newY, m_mainChaZ - slideOffset)
-                    };
-
-                    bool foundValidSlide = false;
-                    for (const auto& slidePos : slidePositions) {
-                        if (!checkCollision(slidePos, 0.25f)) {
-                            m_mainChaX = slidePos.x;
-                            m_mainChaY = slidePos.y;
-                            m_mainChaZ = slidePos.z;
-                            foundValidSlide = true;
-                            break;
-                        }
-                    }
-
-                    if (!foundValidSlide) {
-                        m_mainChaSpeedVertical = 0.0f;
-                    }
-                } else {
-                    // For downward movement, stop at the collision point
-                    m_mainChaY = std::ceil(newY);
-                    m_mainChaSpeedVertical = 0.0f;
-                    m_mainChaJumping = false;
-                }
-            }
-
-            // Ground check with small offset to prevent floating
-            if (m_mainChaY <= 0.1f) {
-                m_mainChaY = 0.0f;
-                m_mainChaSpeedVertical = 0.0f;
+        // Check ground collision
+        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.75, m_mainChaZ);
+        if (isOnGround(newPosition, 0.25f)) {
+            // Character is on ground
+            if (m_mainChaJumping) {
                 m_mainChaJumping = false;
+            }
+            m_mainChaSpeedVertical = 0.0f;
+        } else {
+            // Character is in air, apply gravity if not jumping
+            if (!m_mainChaJumping) {
+                m_mainChaSpeedVertical = gravity * deltaTime;
+                m_mainChaJumping = true;
             }
         }
 

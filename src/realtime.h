@@ -162,7 +162,7 @@ private:
     glm::mat4 m_mainChaOriginalCTM;
 
 
-    bool m_mapLayout[5][9][5];
+    hitBox m_mapHitbox[5][9][5];
     bool checkCollision(const glm::vec3& position, float radius);
     bool checkBoxSphereCollision(const glm::vec3& sphereCenter, float sphereRadius,
                                  const glm::vec3& boxMin, const glm::vec3& boxMax);

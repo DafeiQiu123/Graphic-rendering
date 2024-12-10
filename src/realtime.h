@@ -163,9 +163,10 @@ private:
 
 
     hitBox m_mapHitbox[5][9][5];
-    bool checkCollision(const glm::vec3& position, float radius);
-    bool checkBoxSphereCollision(const glm::vec3& sphereCenter, float sphereRadius,
-                                 const glm::vec3& boxMin, const glm::vec3& boxMax);
+
     void initializeMapLayout();
+    bool checkHorizontalCollision(const glm::vec3& position, float radius);
     bool isOnGround(const glm::vec3& position, float radius);
+    bool checkBoxIntersection(const glm::vec3& box1Min, const glm::vec3& box1Max,
+                              const glm::vec3& box2Min, const glm::vec3& box2Max);
 };

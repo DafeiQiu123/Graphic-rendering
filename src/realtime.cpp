@@ -522,49 +522,59 @@ void Realtime::timerEvent(QTimerEvent *event) {
     GLint viewLoc = glGetUniformLocation(m_shader, "viewMatrix");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &viewMatrix[0][0]);
     glUseProgram(0);
-    if (m_allObjects.size() != 0){
+    if (m_allObjects.size() != 0) {
         auto& mainCha = m_allObjects.back();
-        glm::vec3 sphereMovement(0.0f);
-        if (m_keyMap[Qt::Key_I]) sphereMovement += glm::vec3(0, 0, 1); // Forward
-        if (m_keyMap[Qt::Key_K]) sphereMovement += glm::vec3(0, 0, -1);  // Backward
-        if (m_keyMap[Qt::Key_J]) sphereMovement += glm::vec3(1, 0, 0); // Left
-        if (m_keyMap[Qt::Key_L]) sphereMovement += glm::vec3(-1, 0, 0);  // Right
 
-        // Normalize and apply movement
-        if (glm::length(sphereMovement) > 0.0f) {
-            sphereMovement = glm::normalize(sphereMovement);
-            sphereMovement *= m_mainChaSpeedHorizontal * deltaTime;
-            m_mainChaX += sphereMovement.x;
-            m_mainChaZ += sphereMovement.z;
+        // Handle horizontal movement
+        glm::vec3 horizontalMovement(0.0f);
+        if (m_keyMap[Qt::Key_I]) horizontalMovement.z += 1.0f; // Forward
+        if (m_keyMap[Qt::Key_K]) horizontalMovement.z -= 1.0f; // Backward
+        if (m_keyMap[Qt::Key_J]) horizontalMovement.x += 1.0f; // Left
+        if (m_keyMap[Qt::Key_L]) horizontalMovement.x -= 1.0f; // Right
 
-            // glm::vec3 newPosX(m_mainChaX + sphereMovement.x, m_mainChaY, m_mainChaZ);
-            // glm::vec3 newPosZ(m_mainChaX, m_mainChaY, m_mainChaZ + sphereMovement.z);
+        // Normalize and scale horizontal movement
+        if (glm::length(horizontalMovement) > 0.0f) {
+            horizontalMovement = glm::normalize(horizontalMovement);
+            horizontalMovement *= m_mainChaSpeedHorizontal * deltaTime;
         }
 
+        // Try horizontal movement
+        float newX = m_mainChaX + horizontalMovement.x;
+        float newZ = m_mainChaZ + horizontalMovement.z;
+
+        // Check X collision
+        float worldY = m_mainChaY + 0.75f;
+        glm::vec3 newPositionCheckX(newX, worldY, m_mainChaZ);
+        if (!checkHorizontalCollision(newPositionCheckX, 0.25f)) {
+            m_mainChaX = newX;
+        }
+
+        // Check Z collision
+        glm::vec3 newPositionCheckZ(m_mainChaX, worldY, newZ);
+        if (!checkHorizontalCollision(newPositionCheckZ, 0.25f)) {
+            m_mainChaZ = newZ;
+        }
+
+        // Handle vertical movement (gravity and jumping)
         const float gravity = -9.8f;
         if (m_mainChaJumping) {
             m_mainChaSpeedVertical += gravity * deltaTime;
         }
-
         m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
         // Check ground collision
-        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.75, m_mainChaZ);
-        if (isOnGround(newPosition, 0.25f)) {
-            // Character is on ground
+        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.75f, m_mainChaZ);
+        if (isOnGround(newPosition, 0.28f)) {
             if (m_mainChaJumping) {
                 m_mainChaJumping = false;
             }
             m_mainChaSpeedVertical = 0.0f;
-        } else {
-            // Character is in air, apply gravity if not jumping
-            if (!m_mainChaJumping) {
-                m_mainChaSpeedVertical = gravity * deltaTime;
-                m_mainChaJumping = true;
-            }
+        } else if (!m_mainChaJumping) {
+            m_mainChaSpeedVertical = gravity * deltaTime;
+            m_mainChaJumping = true;
         }
 
-        //Update the sphere's transformation matrix);
+        // Update the sphere's transformation matrix
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));
         mainCha.modelMatrix = translation * m_mainChaOriginalCTM;
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);

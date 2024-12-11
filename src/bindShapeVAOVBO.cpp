@@ -14,8 +14,6 @@
 void Realtime::updateVaoVbo(int p1, int p2){
     m_cube->updateParams(p1);
     m_sphere->updateParams(p1,p2);
-    m_cone->updateParams(p1,p2);
-    m_cylinder->updateParams(p1,p2);
 
     glBindVertexArray(m_cube_vao);
     glBindBuffer(GL_ARRAY_BUFFER,m_cube_vbo);
@@ -25,16 +23,6 @@ void Realtime::updateVaoVbo(int p1, int p2){
     glBindVertexArray(m_sphere_vao);
     glBindBuffer(GL_ARRAY_BUFFER,m_sphere_vbo);
     glBufferData(GL_ARRAY_BUFFER,m_sphere->generateShape().size()*sizeof(GLfloat),m_sphere->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindVertexArray(m_cone_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_cone_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_cone->generateShape().size()*sizeof(GLfloat),m_cone->generateShape().data(),GL_STATIC_DRAW);
-    setVAO();
-
-    glBindVertexArray(m_cylinder_vao);
-    glBindBuffer(GL_ARRAY_BUFFER,m_cylinder_vbo);
-    glBufferData(GL_ARRAY_BUFFER,m_cylinder->generateShape().size()*sizeof(GLfloat),m_cylinder->generateShape().data(),GL_STATIC_DRAW);
     setVAO();
 
     glBindBuffer(GL_ARRAY_BUFFER,0);

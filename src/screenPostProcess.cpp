@@ -12,8 +12,6 @@
 
 void Realtime::screenPostproSetup(){
     m_defaultFBO = 2;
-    m_pixelSwitch = 1; // if switch == 0, invert feature; if switch == 1, grayscale feature; if switch == 2, tone mapping feature
-    m_kernelSwitch = 1; // if switch == 0, blur feature; if switch == 1, shapern feature; if switch == 3, edge detect feature
     m_screen_width = size().width() * m_devicePixelRatio;
     m_screen_height = size().height() * m_devicePixelRatio;
     m_fbo_width = m_screen_width;

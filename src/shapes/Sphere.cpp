@@ -16,27 +16,33 @@ void Sphere::makeTile(glm::vec3 topLeft,
     //       but the normals are calculated in a different way!
     insertVec3(m_vertexData, topLeft);
     insertVec3(m_vertexData, glm::normalize(topLeft));
-    addUV(m_vertexData, topLeft);
+    m_vertexData.push_back(0);
+    m_vertexData.push_back(1);
 
     insertVec3(m_vertexData, bottomLeft);
     insertVec3(m_vertexData, glm::normalize(bottomLeft));
-    addUV(m_vertexData, bottomLeft);
+    m_vertexData.push_back(0);
+    m_vertexData.push_back(0);
 
     insertVec3(m_vertexData, bottomRight);
     insertVec3(m_vertexData, glm::normalize(bottomRight));
-    addUV(m_vertexData, bottomRight);
+    m_vertexData.push_back(1);
+    m_vertexData.push_back(0);
 
     insertVec3(m_vertexData, topLeft);
     insertVec3(m_vertexData, glm::normalize(topLeft));
-    addUV(m_vertexData, topLeft);
+    m_vertexData.push_back(0);
+    m_vertexData.push_back(1);
 
     insertVec3(m_vertexData, bottomRight);
     insertVec3(m_vertexData, glm::normalize(bottomRight));
-    addUV(m_vertexData, bottomRight);
+    m_vertexData.push_back(1);
+    m_vertexData.push_back(0);
 
     insertVec3(m_vertexData, topRight);
     insertVec3(m_vertexData, glm::normalize(topRight));
-    addUV(m_vertexData, topRight);
+    m_vertexData.push_back(1);
+    m_vertexData.push_back(1);
 
 }
 

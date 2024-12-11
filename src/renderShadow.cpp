@@ -84,14 +84,6 @@ void Realtime::renderShadowMap(){
                         glBindVertexArray(m_sphere_vao);
                         glDrawArrays(GL_TRIANGLES,0,m_sphere->generateShape().size()/8);
                     break;
-                case PrimitiveType::PRIMITIVE_CONE:
-                        glBindVertexArray(m_cone_vao);
-                        glDrawArrays(GL_TRIANGLES,0,m_cone->generateShape().size()/8);
-                    break;
-                case PrimitiveType::PRIMITIVE_CYLINDER:
-                        glBindVertexArray(m_cylinder_vao);
-                        glDrawArrays(GL_TRIANGLES,0,m_cylinder->generateShape().size()/8);
-                    break;
                 // case PrimitiveType::PRIMITIVE_MESH:
                 //     glBindVertexArray(m_mesh_vao);
                 //     glDrawArrays(GL_TRIANGLES, 0, m_mesh->getVertexData().size() / 8);

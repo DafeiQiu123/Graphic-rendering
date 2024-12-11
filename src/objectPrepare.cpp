@@ -67,7 +67,7 @@ void Realtime::createBackground(){
     background.textureID = m_background_texture;
     background.vbo = m_cube_vbo;
     background.vao = m_cube_vao;
-    background.objectType = 1;
+    background.objectType = 2;
     background.material.cAmbient = glm::vec4(0.0f);
     background.material.cDiffuse = glm::vec4(0.1,0.1,0.1,0);
     background.material.cSpecular = glm::vec4(0.0f);
@@ -175,7 +175,7 @@ void Realtime::createPortal2(){
 }
 void Realtime::createMainCharacter(){
     basicMapFile mainCha;
-    glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
+    glm::vec3 translate = glm::vec3(float(0),float(0.76),float(0));
     glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
     float angle = 0;
     glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);
@@ -187,10 +187,10 @@ void Realtime::createMainCharacter(){
     mainCha.vbo = m_sphere_vbo;
     mainCha.vao = m_sphere_vao;
     mainCha.objectType = 1;
-    mainCha.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
-    mainCha.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
+    mainCha.material.cAmbient = glm::vec4(0.1,0.1,0.1,0);
+    mainCha.material.cDiffuse = glm::vec4(0.3,0.3,0.3,0);
     mainCha.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
-    mainCha.material.shininess = 5;
+    mainCha.material.shininess = 1;
     mainCha.material.blend = 1;
     mainCha.material.textureMap.isUsed = true;
     m_mainChaOriginalCTM = mainCha.modelMatrix;

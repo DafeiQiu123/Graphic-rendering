@@ -48,9 +48,7 @@ void Realtime::finish() {
     glDeleteBuffers(1, &m_mesh_bunny_vbo);
 
     delete m_sphere;
-    delete m_cone;
     delete m_cube;
-    delete m_cylinder;
     delete m_mesh_dragon;
     delete m_mesh_bunny;
 
@@ -120,17 +118,11 @@ void Realtime::initializeGL() {
     m_shader = ShaderLoader::createShaderProgram("resources/shaders/default.vert", "resources/shaders/default.frag");
     m_cube = new Cube();
     m_sphere = new Sphere();
-    m_cone = new Cone();
-    m_cylinder = new Cylinder();
 
     glGenVertexArrays(1,&m_cube_vao);
     glGenBuffers(1, &m_cube_vbo);
     glGenVertexArrays(1,&m_sphere_vao);
     glGenBuffers(1, &m_sphere_vbo);
-    glGenVertexArrays(1,&m_cone_vao);
-    glGenBuffers(1, &m_cone_vbo);
-    glGenVertexArrays(1,&m_cylinder_vao);
-    glGenBuffers(1, &m_cylinder_vbo);
     updateVaoVbo(settings.shapeParameter1, settings.shapeParameter2);
 
     // for extra credit mesh rendering
@@ -171,7 +163,7 @@ void Realtime::initializeGL() {
     m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_cube_texture, &m_cube_texture_image);
 
-    std::string filepathString2 = "asset/liqmtl.png";
+    std::string filepathString2 = "asset/mainCha.png";
     QString filepath2 = QString(filepathString2.c_str());
     std::cout << "update texture " << filepath2.toStdString() << std::endl;
     m_mainCha_texture_image = QImage(filepath2).convertToFormat(QImage::Format_RGBA8888).mirrored();
@@ -196,6 +188,14 @@ void Realtime::initializeGL() {
     createPortal1();
     createPortal2();
     createMainCharacter();
+    // objectType 0: cube map; 1: main character; 2: background; 3: dragon; 4: bunny; 5: portal1; 6: portal2
+    for (size_t i = 0; i < m_allObjects.size(); i++){
+        if (m_allObjects[i].objectType == 1) mainChaIndex = i;
+        if (m_allObjects[i].objectType == 3) dragonIndex = i;
+        if (m_allObjects[i].objectType == 4) bunnyIndex = i;
+        if (m_allObjects[i].objectType == 5) portal1Index = i;
+        if (m_allObjects[i].objectType == 6) portal2Index = i;
+    }
 }
 
 void Realtime::paintBasicMap(){
@@ -346,45 +346,17 @@ void Realtime::sceneChanged() {
 
 void Realtime::settingsChanged() {
     makeCurrent();
-    if (settings.perPixelFilter) {
-        if (m_pixelSwitch == 0) m_postprocess = 1;
-        else if (m_pixelSwitch == 1) m_postprocess = 2;
-        else m_postprocess = 5;
+    if (settings.toggle1) {
+        m_postprocess = 1;
     }
-    if (settings.kernelBasedFilter) {
-        if (m_kernelSwitch == 0) m_postprocess = 3;
-        else if (m_kernelSwitch == 1) m_postprocess = 4;
-        else m_postprocess = 6;
+    if (settings.toggle2) {
+        m_postprocess = 2;
     }
-    if (settings.extraCredit1) m_postprocess = 7;
-    if (!settings.perPixelFilter && !settings.kernelBasedFilter && !settings.extraCredit1){
+    if (!settings.toggle1 && !settings.toggle2){
         m_postprocess = 0;
     }
     if (m_previous_postprocess != m_postprocess){
-        std::cout << "current filter: " << m_postprocess << std::endl;
         m_previous_postprocess = m_postprocess;
-    }
-    if (settings.nearPlane != preNear || settings.farPlane != preFar){
-        if (m_sphere) { // if the m_sphere is nullptr, meaning uninitialized, the update will not work
-            m_camera.updateNearFar(settings.nearPlane,settings.farPlane);
-            glUseProgram(m_shader);
-            glm::mat4 projectionMatrix = m_camera.getProjectionMatrix();
-            GLint projLoc = glGetUniformLocation(m_shader, "projMatrix");
-            glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projectionMatrix[0][0]);
-            glUseProgram(0);
-            preNear = settings.nearPlane;
-            preFar = settings.farPlane;
-            std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-                      << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
-        }
-    }
-    if (settings.shapeParameter1 != preP1 || settings.shapeParameter2 != preP2){
-        if (m_sphere) updateVaoVbo(settings.shapeParameter1,settings.shapeParameter2);
-        preP1 = settings.shapeParameter1;
-        preP2 = settings.shapeParameter2;
-
-        std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-                  << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
     }
     update(); // asks for a PaintGL() call to occur
 }
@@ -462,7 +434,9 @@ void Realtime::timerEvent(QTimerEvent *event) {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &viewMatrix[0][0]);
     glUseProgram(0);
     if (m_allObjects.size() != 0) {
-        auto& mainCha = m_allObjects.back();
+        if (bunnyTrigger) m_gravity = -4.9f;
+        if (dragonTrigger) m_mainChaSpeedHorizontal = 7.5f;
+        auto& mainCha = m_allObjects[mainChaIndex];
 
         // Handle horizontal movement
         glm::vec3 horizontalMovement(0.0f);
@@ -482,7 +456,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         float newZ = m_mainChaZ + horizontalMovement.z;
 
         // Check X collision
-        float worldY = m_mainChaY + 0.75f;
+        float worldY = m_mainChaY + 0.76f;
         glm::vec3 newPositionCheckX(newX, worldY, m_mainChaZ);
         if (!checkHorizontalCollision(newPositionCheckX, 0.25f)) {
             m_mainChaX = newX;
@@ -495,21 +469,20 @@ void Realtime::timerEvent(QTimerEvent *event) {
         }
 
         // Handle vertical movement (gravity and jumping)
-        const float gravity = -9.8f;
         if (m_mainChaJumping) {
-            m_mainChaSpeedVertical += gravity * deltaTime;
+            m_mainChaSpeedVertical += m_gravity * deltaTime;
         }
         m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
         // Check ground collision
-        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.75f, m_mainChaZ);
+        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.76f, m_mainChaZ);
         if (isOnGround(newPosition, 0.28f)) {
             if (m_mainChaJumping) {
                 m_mainChaJumping = false;
             }
             m_mainChaSpeedVertical = 0.0f;
         } else if (!m_mainChaJumping) {
-            m_mainChaSpeedVertical = gravity * deltaTime;
+            m_mainChaSpeedVertical = m_gravity * deltaTime;
             m_mainChaJumping = true;
         }
 

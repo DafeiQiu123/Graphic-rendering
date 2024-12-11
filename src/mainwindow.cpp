@@ -25,9 +25,9 @@ void MainWindow::initialize() {
     connect(uploadFile, &QPushButton::clicked, this, &MainWindow::onUploadFile);
 
     // Create two toggle boxes
-    toggle1 = new QCheckBox("Toggle 1", this);
-    toggle2 = new QCheckBox("Toggle 2", this);
-    toggle3 = new QCheckBox("Toggle 3", this);
+    toggle1 = new QCheckBox("Edge", this);
+    toggle2 = new QCheckBox("FXAA", this);
+    toggle3 = new QCheckBox("Shadow", this);
 
     // Add them to the layout
     vLayout->addWidget(toggle1);
@@ -58,17 +58,17 @@ void MainWindow::onToggle1() {
     // Invert or set the setting based on toggle state
     settings.toggle1 = toggle1->isChecked();
     realtime->settingsChanged();
-    std::cout << "Toggle 1: " << (settings.toggle1 ? "ON" : "OFF") << std::endl;
+    std::cout << "Cool Edge: " << (settings.toggle1 ? "ON" : "OFF") << std::endl;
 }
 
 void MainWindow::onToggle2() {
     settings.toggle2 = toggle2->isChecked();
     realtime->settingsChanged();
-    std::cout << "Toggle 2: " << (settings.toggle2 ? "ON" : "OFF") << std::endl;
+    std::cout << "FXAA: " << (settings.toggle2 ? "ON" : "OFF") << std::endl;
 }
 
 void MainWindow::onToggle3() {
     settings.toggle3 = toggle3->isChecked();
     realtime->settingsChanged();
-    std::cout << "Toggle 3: " << (settings.toggle3 ? "ON" : "OFF") << std::endl;
+    std::cout << "Shadow: " << (settings.toggle3 ? "ON" : "OFF") << std::endl;
 }

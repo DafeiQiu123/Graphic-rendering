@@ -29,10 +29,11 @@ uniform int lightType[8];
 uniform float lightAngle[8];
 uniform float lightPenumbra[8];
 
+
 uniform float blend;
 uniform bool isTexture;
 uniform sampler2D textureSampler;
-
+uniform bool shadow_on;
 uniform sampler2D shadowMap;
 
 out vec4 fragColor;
@@ -105,7 +106,7 @@ void main() {
         if (closeness < 0.0f || (closeness == 0.0f && material.shininess <= 0.0f)) powResult = 0.0f;
         else powResult = pow(max(closeness, 0.0f), material.shininess);
         vec3 specularTerm = attenuation * powResult * material.specular * globalData.ks * actualLight;
-        if (lightType[i] == 0) {
+        if (lightType[i] == 0 && shadow_on) {
             bool inShadow = ShadowCalculation();
             if (!inShadow) result += diffuseTerm + specularTerm;
         } else {

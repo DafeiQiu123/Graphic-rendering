@@ -3,8 +3,6 @@
 #include <QCoreApplication>
 #include <QMouseEvent>
 #include <QKeyEvent>
-#include <iostream>
-#include "settings.h"
 #include <utils/scenedata.h>
 #include <utils/sceneparser.h>
 #include <utils/shaderloader.h>

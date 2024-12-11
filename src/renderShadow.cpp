@@ -4,7 +4,6 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <iostream>
-#include "settings.h"
 #include <utils/scenedata.h>
 #include <utils/sceneparser.h>
 #include <utils/shaderloader.h>
@@ -47,10 +46,11 @@ void Realtime::renderShadowMap(){
         if (light.type == LightType::LIGHT_DIRECTIONAL) {
             ShadowMap& shadowMap = m_shadowMap;
             glm::vec3 lightInvDir = -glm::normalize(glm::vec3(light.dir));
-
+            float orthoSize = 5.0f; // Adjust based on your scene's size
+            float near_plane = 0.1f, far_plane = 20.0f;
             // Compute the MVP matrix from the light's point of view
-            glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-            glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir * 9.f,
+            glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize, orthoSize, -orthoSize, orthoSize, near_plane, far_plane);
+            glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir * orthoSize,
                                                     glm::vec3(0,0,0),
                                                     glm::vec3(0,1,0));
             glm::mat4 depthModelMatrix = glm::mat4(1.0);

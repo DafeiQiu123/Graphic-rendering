@@ -76,6 +76,12 @@ void Realtime::finish() {
     glDeleteTextures(1,&m_mainCha_texture);
     glDeleteTextures(1, &m_background_texture);
     m_allObjects.clear();
+
+    // shadow debug
+    glDeleteVertexArrays(1, &m_debug_quad_vao);
+    glDeleteBuffers(1, &m_debug_quad_vbo);
+    glDeleteProgram(m_debug_shader);
+
     this->doneCurrent();
 }
 
@@ -227,6 +233,8 @@ void Realtime::paintBasicMap(){
         glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
         GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
         glUniform1i(samplerLoc, 0);
+        GLint shadowOnLoc = glGetUniformLocation(m_shader, "shadow_on");
+        glUniform1i(shadowOnLoc, shadow_on);
         if (oneCube.objectType == 0 || oneCube.objectType == 2 || oneCube.objectType == 5 || oneCube.objectType == 6){
             glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
@@ -246,13 +254,15 @@ void Realtime::paintBasicMap(){
 }
 void Realtime::paintGL() {
     // Students: anything requiring OpenGL calls every frame should be done here
-    // Project 6 extra credit shadow mapping, bind the shadowfbo, lights to depthMap;
+
+    // shadow mapping, bind the shadowfbo, lights to depthMap;
     renderShadowMap();
+
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_fbo_width, m_fbo_height);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
+
     // Final Project
     paintBasicMap();
 
@@ -265,6 +275,18 @@ void Realtime::paintGL() {
     glViewport(0, 0, m_screen_width, m_screen_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     paintTexture(m_fbo_texture);
+
+    // debug shadow
+    // glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+    // glViewport(0, 0, m_screen_width, m_screen_height);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // glUseProgram(m_debug_shader);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, m_shadowMap.depthMap);
+    // glUniform1i(glGetUniformLocation(m_debug_shader, "depthMap"), 0);
+
+    // renderDebugQuad();
 }
 
 void Realtime::resizeGL(int w, int h) {
@@ -330,8 +352,6 @@ void Realtime::sceneChanged() {
     int numLights = std::min(static_cast<int>(allLights.size()), maxLightNumber);
     GLint numLightsLoc = glGetUniformLocation(m_shader, "numLights");
     glUniform1i(numLightsLoc, numLights);
-    // GLint numLightsVLoc = glGetUniformLocation(m_shader, "numLightsV");
-    // glUniform1i(numLightsVLoc, numLights);
 
     for (int i = 0; i < numLights; ++i) {
         const SceneLightData& light = allLights[i];
@@ -360,18 +380,11 @@ void Realtime::sceneChanged() {
 
 void Realtime::settingsChanged() {
     makeCurrent();
-    if (settings.toggle1) {
-        m_postprocess = 1;
-    }
-    if (settings.toggle2) {
-        m_postprocess = 2;
-    }
-    if (!settings.toggle1 && !settings.toggle2){
-        m_postprocess = 0;
-    }
-    if (m_previous_postprocess != m_postprocess){
-        m_previous_postprocess = m_postprocess;
-    }
+    if (settings.toggle1) m_postprocess = 1;
+    if (settings.toggle2) m_postprocess = 2;
+    if (!settings.toggle1 && !settings.toggle2) m_postprocess = 0;
+    if (m_previous_postprocess != m_postprocess) m_previous_postprocess = m_postprocess;
+    shadow_on = settings.toggle3;
     update(); // asks for a PaintGL() call to occur
 }
 

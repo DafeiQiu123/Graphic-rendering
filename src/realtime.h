@@ -182,5 +182,6 @@ private:
     GLuint m_debug_quad_vbo;
     void initDebugQuad();
     void renderDebugQuad();
+    bool shadow_on = false;
 
 };

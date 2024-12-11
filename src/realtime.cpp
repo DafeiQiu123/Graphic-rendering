@@ -40,21 +40,19 @@ void Realtime::finish() {
     glDeleteBuffers(1, &m_cube_vbo);
     glDeleteVertexArrays(1, &m_sphere_vao);
     glDeleteBuffers(1, &m_sphere_vbo);
-    glDeleteVertexArrays(1, &m_cone_vao);
-    glDeleteBuffers(1, &m_cone_vbo);
-    glDeleteVertexArrays(1, &m_cylinder_vao);
-    glDeleteBuffers(1, &m_cylinder_vbo);
-    glDeleteProgram(m_shader);
 
     // for extra credit Mesh Rendering
-    glDeleteVertexArrays(1, &m_mesh_vao);
-    glDeleteBuffers(1, &m_mesh_vbo);
+    glDeleteVertexArrays(1, &m_mesh_dragon_vao);
+    glDeleteBuffers(1, &m_mesh_dragon_vbo);
+    glDeleteVertexArrays(1, &m_mesh_bunny_vao);
+    glDeleteBuffers(1, &m_mesh_bunny_vbo);
 
     delete m_sphere;
     delete m_cone;
     delete m_cube;
     delete m_cylinder;
-    delete m_mesh;
+    delete m_mesh_dragon;
+    delete m_mesh_bunny;
 
     // Project 6 action
     glDeleteProgram(m_texture_shader);
@@ -96,94 +94,6 @@ void Realtime::bindTexture(GLuint& textureID, QImage* image){
     glBindTexture(GL_TEXTURE_2D,0);
 }
 
-bool Realtime::mapGeneratingFunction(glm::vec3 xyz){
-    if (xyz.y > xyz.x + xyz.z) return false;
-    return true;
-}
-
-void Realtime::createMap(){
-    for (int z = 0; z < 5; z++){
-        for (int y = 0; y < 9; y++){
-            for (int x = 0; x < 5; x++){
-                if(!mapGeneratingFunction(glm::vec3(x,y,z))) continue;
-                basicMapFile oneCube;
-                glm::vec3 translate = glm::vec3(float(x),float(y),float(z));
-                glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
-                float angle = 0;
-                glm::vec3 scale = glm::vec3(1.f,1.f,1.f);
-                oneCube.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
-                                    * glm::rotate(glm::mat4(1.0f), angle, rotate)
-                                    * glm::scale(glm::mat4(1.0f), scale);
-                oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
-                oneCube.textureID = m_cube_texture;
-                oneCube.vbo = m_cube_vbo;
-                oneCube.vao = m_cube_vao;
-                oneCube.objectType = 0;
-                oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
-                oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
-                oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
-                oneCube.material.shininess = 1;
-                oneCube.material.blend = 1;
-                oneCube.material.textureMap.isUsed = true;
-
-                oneCube.hitboxObj.hitBoxA = translate - glm::vec3(0.5f);  // min bounds
-                oneCube.hitboxObj.hitBoxB = translate + glm::vec3(0.5f);  // max bounds
-                oneCube.hitboxObj.cood = translate;
-
-                m_mapHitbox[x][y][z] = oneCube.hitboxObj;
-
-                m_allObjects.push_back(oneCube);
-            }
-        }
-    }
-}
-
-void Realtime::createBackground(){
-    basicMapFile background;
-    glm::vec3 translate = glm::vec3(float(20),float(0),float(20));
-    glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
-    float angle = glm::radians(45.0f);
-    glm::vec3 scale = glm::vec3(50,50,0.01);
-    background.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
-                          * glm::rotate(glm::mat4(1.0f), angle, rotate)
-                          * glm::scale(glm::mat4(1.0f), scale);
-    background.inverseModelMatrix = glm::inverse(background.modelMatrix);
-    background.textureID = m_background_texture;
-    background.vbo = m_cube_vbo;
-    background.vao = m_cube_vao;
-    background.objectType = 1;
-    background.material.cAmbient = glm::vec4(0.0f);
-    background.material.cDiffuse = glm::vec4(0.1,0.1,0.1,0);
-    background.material.cSpecular = glm::vec4(0.0f);
-    background.material.shininess = 5;
-    background.material.blend = 1;
-    background.material.textureMap.isUsed = true;
-    m_mainChaOriginalCTM = background.modelMatrix;
-    m_allObjects.push_back(background);
-}
-void Realtime::createMainCharacter(){
-    basicMapFile mainCha;
-    glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
-    glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
-    float angle = 0;
-    glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);
-    mainCha.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
-                          * glm::rotate(glm::mat4(1.0f), angle, rotate)
-                          * glm::scale(glm::mat4(1.0f), scale);
-    mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
-    mainCha.textureID = m_mainCha_texture;
-    mainCha.vbo = m_sphere_vbo;
-    mainCha.vao = m_sphere_vao;
-    mainCha.objectType = 1;
-    mainCha.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
-    mainCha.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
-    mainCha.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
-    mainCha.material.shininess = 5;
-    mainCha.material.blend = 1;
-    mainCha.material.textureMap.isUsed = true;
-    m_mainChaOriginalCTM = mainCha.modelMatrix;
-    m_allObjects.push_back(mainCha);
-}
 
 void Realtime::initializeGL() {
     m_devicePixelRatio = this->devicePixelRatio();
@@ -224,12 +134,24 @@ void Realtime::initializeGL() {
     updateVaoVbo(settings.shapeParameter1, settings.shapeParameter2);
 
     // for extra credit mesh rendering
-    m_mesh = new Mesh();
-    glGenVertexArrays(1,&m_mesh_vao);
-    glGenBuffers(1,&m_mesh_vbo);
-    glBindVertexArray(m_mesh_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_mesh_vbo);
-    glBufferData(GL_ARRAY_BUFFER, m_mesh->getVertexData().size() * sizeof(float),m_mesh->getVertexData().data(), GL_STATIC_DRAW);
+    m_mesh_dragon = new Mesh();
+    m_mesh_bunny = new Mesh();
+    m_mesh_dragon->loadOBJ("asset/dragon.obj");
+    m_mesh_bunny->loadOBJ("asset/bunny.obj");
+    glGenVertexArrays(1,&m_mesh_dragon_vao);
+    glGenBuffers(1,&m_mesh_dragon_vbo);
+    glBindVertexArray(m_mesh_dragon_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_mesh_dragon_vbo);
+    glBufferData(GL_ARRAY_BUFFER, m_mesh_dragon->getVertexData().size() * sizeof(float),m_mesh_dragon->getVertexData().data(), GL_STATIC_DRAW);
+    setVAO();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    glGenVertexArrays(1,&m_mesh_bunny_vao);
+    glGenBuffers(1,&m_mesh_bunny_vbo);
+    glBindVertexArray(m_mesh_bunny_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_mesh_bunny_vbo);
+    glBufferData(GL_ARRAY_BUFFER, m_mesh_bunny->getVertexData().size() * sizeof(float),m_mesh_bunny->getVertexData().data(), GL_STATIC_DRAW);
     setVAO();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -261,8 +183,18 @@ void Realtime::initializeGL() {
     m_background_texture_image = QImage(filepath3).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_background_texture, &m_background_texture_image);
 
+    std::string filepathString4 = "asset/portal.png";
+    QString filepath4 = QString(filepathString4.c_str());
+    std::cout << "update texture " << filepath4.toStdString() << std::endl;
+    m_portal_texture_image = QImage(filepath4).convertToFormat(QImage::Format_RGBA8888).mirrored();
+    bindTexture(m_portal_texture, &m_portal_texture_image);
+
     createMap();
     createBackground();
+    createDragon();
+    createBunny();
+    createPortal1();
+    createPortal2();
     createMainCharacter();
 }
 
@@ -291,12 +223,18 @@ void Realtime::paintBasicMap(){
         glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
         GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
         glUniform1i(samplerLoc, 0);
-        if (oneCube.objectType == 0 || oneCube.objectType == 2){
+        if (oneCube.objectType == 0 || oneCube.objectType == 2 || oneCube.objectType == 5 || oneCube.objectType == 6){
             glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
         } else if (oneCube.objectType == 1){
             glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_sphere->generateShape().size()/8);
+        } else if (oneCube.objectType == 3) {
+            glBindVertexArray(oneCube.vao);
+            glDrawArrays(GL_TRIANGLES,0,m_mesh_dragon->getVertexData().size()/8);
+        } else if (oneCube.objectType == 4) {
+            glBindVertexArray(oneCube.vao);
+            glDrawArrays(GL_TRIANGLES,0,m_mesh_bunny->getVertexData().size()/8);
         }
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -574,12 +512,32 @@ void Realtime::timerEvent(QTimerEvent *event) {
             m_mainChaJumping = true;
         }
 
+        //std::cout << m_mainChaX << " " << m_mainChaY << " " << m_mainChaZ << std::endl;
         // Update the sphere's transformation matrix
+        if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
+            m_mainChaZ >= 2.5 && m_mainChaZ <= 3.5 &&
+            m_mainChaX >= 4.5){
+            m_allObjects[dragonIndex].textureID = m_cube_texture;
+            dragonTrigger = true;
+            m_mainChaX = 0;
+            m_mainChaY = 0;
+            m_mainChaZ = 0;
+        }
+        if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
+            m_mainChaX >= 2.5 && m_mainChaX <= 3.5 &&
+            m_mainChaZ >= 4.5){
+            m_allObjects[bunnyIndex].textureID = m_cube_texture;
+            bunnyTrigger = true;
+            m_mainChaX = 0;
+            m_mainChaY = 0;
+            m_mainChaZ = 0;
+        }
         if (m_mainChaY < 0) {
             m_mainChaX = 0;
             m_mainChaY = 0;
             m_mainChaZ = 0;
         }
+
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));
         mainCha.modelMatrix = translation * m_mainChaOriginalCTM;
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);

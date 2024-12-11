@@ -273,11 +273,7 @@ void MainWindow::onUploadFile() {
     QString configFilePath = QFileDialog::getOpenFileName(this, tr("Upload File"),
                                                           QDir::currentPath()
                                                               .append(QDir::separator())
-                                                              .append("scenefiles")
-                                                              .append(QDir::separator())
-                                                              .append("action")
-                                                              .append(QDir::separator())
-                                                              .append("extra_credit"), tr("Scene Files (*.json)"));
+                                                              .append("asset"), tr("Scene Files (*.json)"));
     if (configFilePath.isNull()) {
         std::cout << "Failed to load null scenefile." << std::endl;
         return;

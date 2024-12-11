@@ -31,7 +31,7 @@ add_executable(${PROJECT_NAME}
     src/realtime.cpp
     src/mainwindow.cpp
     src/settings.cpp
-    src/drawOriginal.cpp
+
     src/bindShapeVAOVBO.cpp
     src/utils/scenefilereader.cpp
     src/utils/sceneparser.cpp
@@ -61,6 +61,7 @@ add_executable(${PROJECT_NAME}
     src/shapes/Cone.h
     src/shapes/Mesh.h
     src/collision.cpp
+    src/objectPrepare.cpp
 
 
 

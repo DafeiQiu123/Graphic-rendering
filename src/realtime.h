@@ -108,9 +108,12 @@ private:
     void setVAO();
 
     // For extra credit mesh rendering
-    GLuint m_mesh_vao;
-    GLuint m_mesh_vbo;
-    Mesh* m_mesh = nullptr;
+    GLuint m_mesh_dragon_vao;
+    GLuint m_mesh_dragon_vbo;
+    GLuint m_mesh_bunny_vao;
+    GLuint m_mesh_bunny_vbo;
+    Mesh* m_mesh_dragon = nullptr;
+    Mesh* m_mesh_bunny = nullptr;
 
     // Project 6 action
     void screenPostproSetup();
@@ -145,15 +148,25 @@ private:
     GLuint m_cube_texture;
     GLuint m_mainCha_texture;
     GLuint m_background_texture;
+    GLuint m_portal_texture;
     QImage m_background_texture_image;
     QImage m_mainCha_texture_image;
+    QImage m_portal_texture_image;
     QImage m_cube_texture_image;
     void bindTexture(GLuint& textureID, QImage* image);
     void createMap();
+    void createDragon();
+    void createBunny();
+    void createPortal1();
+    void createPortal2();
     void createMainCharacter();
     bool mapGeneratingFunction(glm::vec3 xyz);
     void paintBasicMap();
     void createBackground();
+    size_t dragonIndex = 125;
+    size_t bunnyIndex = 126;
+    bool dragonTrigger = false;
+    bool bunnyTrigger = false;
     // main character movement
     float m_mainChaX,m_mainChaY,m_mainChaZ = 0.0f;
     bool m_mainChaJumping = false;

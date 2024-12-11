@@ -48,7 +48,6 @@ bool Mesh::loadOBJ(const std::string &filepath)
         }
     }
     objFile.close();
-    std::cout << temp_face[0][0] << " " << temp_face[0][1] << " " << temp_face[0][2];
     int count = 0;
     // Compute normals
     for (int i = 0; i < temp_face.size(); i++){

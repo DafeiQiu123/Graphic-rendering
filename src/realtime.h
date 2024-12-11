@@ -183,5 +183,6 @@ private:
     void initDebugQuad();
     void renderDebugQuad();
     bool shadow_on = false;
+    bool developer_on = false;
 
 };

@@ -8,6 +8,7 @@ struct Settings {
     bool toggle1 = false;
     bool toggle2 = false;
     bool toggle3 = false;
+    bool toggle4 = false;
 };
 
 

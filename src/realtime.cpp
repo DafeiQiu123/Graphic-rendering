@@ -385,6 +385,7 @@ void Realtime::settingsChanged() {
     if (!settings.toggle1 && !settings.toggle2) m_postprocess = 0;
     if (m_previous_postprocess != m_postprocess) m_previous_postprocess = m_postprocess;
     shadow_on = settings.toggle3;
+    developer_on = settings.toggle4;
     update(); // asks for a PaintGL() call to occur
 }
 
@@ -417,7 +418,7 @@ void Realtime::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void Realtime::mouseMoveEvent(QMouseEvent *event) {
-    if (m_mouseDown) {
+    if (m_mouseDown && developer_on) {
         int posX = event->position().x();
         int posY = event->position().y();
         int deltaX = posX - m_prev_mouse_pos.x;
@@ -454,7 +455,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
         // std::cout<<m_camera.getCameraPos().x<<"===="<<m_camera.getCameraPos().y<<"==="<<m_camera.getCameraPos().z<<"===";
     }
-    m_camera.updateTranslation(movement);
+    if (developer_on) m_camera.updateTranslation(movement);
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();
     GLint viewLoc = glGetUniformLocation(m_shader, "viewMatrix");

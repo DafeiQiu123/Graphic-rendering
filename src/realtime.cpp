@@ -292,6 +292,8 @@ void Realtime::sceneChanged() {
     dragonTrigger = false;
     m_allObjects[dragonIndex].textureID = m_background_texture;
     m_allObjects[bunnyIndex].textureID = m_background_texture;
+    m_gravity = -9.8f;
+    m_mainChaSpeedHorizontal = 5.0f;
     m_metaData = RenderData();
     bool success = SceneParser::parse(settings.sceneFilePath, m_metaData);
     if (!success) std::cout << "parsing failed";

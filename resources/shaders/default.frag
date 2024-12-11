@@ -32,8 +32,8 @@ uniform float blend;
 uniform bool isTexture;
 uniform sampler2D textureSampler;
 
-// in vec4 FragPosLightSpace[8];
-// uniform sampler2D shadowMaps[8];
+// in vec4 FragPosLightSpace;
+// uniform sampler2D shadowMaps;
 
 out vec4 fragColor;
 

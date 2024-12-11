@@ -15,6 +15,9 @@ struct Settings {
     bool extraCredit2 = false;
     bool extraCredit3 = false;
     bool extraCredit4 = false;
+    bool toggle1 = false;
+    bool toggle2 = false;
+    bool toggle3 = false;
 };
 
 

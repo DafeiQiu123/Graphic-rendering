@@ -366,16 +366,16 @@ void Realtime::settingsChanged() {
     }
     if (settings.nearPlane != preNear || settings.farPlane != preFar){
         if (m_sphere) { // if the m_sphere is nullptr, meaning uninitialized, the update will not work
-        m_camera.updateNearFar(settings.nearPlane,settings.farPlane);
-        glUseProgram(m_shader);
-        glm::mat4 projectionMatrix = m_camera.getProjectionMatrix();
-        GLint projLoc = glGetUniformLocation(m_shader, "projMatrix");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projectionMatrix[0][0]);
-        glUseProgram(0);
-        preNear = settings.nearPlane;
-        preFar = settings.farPlane;
-        std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-                  << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
+            m_camera.updateNearFar(settings.nearPlane,settings.farPlane);
+            glUseProgram(m_shader);
+            glm::mat4 projectionMatrix = m_camera.getProjectionMatrix();
+            GLint projLoc = glGetUniformLocation(m_shader, "projMatrix");
+            glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projectionMatrix[0][0]);
+            glUseProgram(0);
+            preNear = settings.nearPlane;
+            preFar = settings.farPlane;
+            std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
+                      << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
         }
     }
     if (settings.shapeParameter1 != preP1 || settings.shapeParameter2 != preP2){
@@ -384,10 +384,11 @@ void Realtime::settingsChanged() {
         preP2 = settings.shapeParameter2;
 
         std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-              << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
+                  << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
     }
     update(); // asks for a PaintGL() call to occur
 }
+
 
 // ================== Project 6: Action!
 
@@ -543,68 +544,4 @@ void Realtime::timerEvent(QTimerEvent *event) {
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
     }
     update(); // asks for a PaintGL() call to occur
-}
-
-// DO NOT EDIT
-void Realtime::saveViewportImage(std::string filePath) {
-    // Make sure we have the right context and everything has been drawn
-    makeCurrent();
-
-    int fixedWidth = 1024;
-    int fixedHeight = 768;
-
-    // Create Frame Buffer
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    // Create a color attachment texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fixedWidth, fixedHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-    // Optional: Create a depth buffer if your rendering uses depth testing
-    GLuint rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, fixedWidth, fixedHeight);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "Error: Framebuffer is not complete!" << std::endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        return;
-    }
-
-    // Render to the FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glViewport(0, 0, fixedWidth, fixedHeight);
-
-    // Clear and render your scene here
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    paintGL();
-
-    // Read pixels from framebuffer
-    std::vector<unsigned char> pixels(fixedWidth * fixedHeight * 3);
-    glReadPixels(0, 0, fixedWidth, fixedHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
-
-    // Unbind the framebuffer to return to default rendering to the screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Convert to QImage
-    QImage image(pixels.data(), fixedWidth, fixedHeight, QImage::Format_RGB888);
-    QImage flippedImage = image.mirrored(); // Flip the image vertically
-
-    // Save to file using Qt
-    QString qFilePath = QString::fromStdString(filePath);
-    if (!flippedImage.save(qFilePath)) {
-        std::cerr << "Failed to save image to " << filePath << std::endl;
-    }
-
-    // Clean up
-    glDeleteTextures(1, &texture);
-    glDeleteRenderbuffers(1, &rbo);
-    glDeleteFramebuffers(1, &fbo);
 }

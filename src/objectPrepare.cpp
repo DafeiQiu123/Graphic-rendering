@@ -11,48 +11,51 @@
 #include <camera/camera.h>
 #include <glm/gtx/transform.hpp>
 // For extra credit Adaptive level of Detail
-bool Realtime::mapGeneratingFunction(glm::vec3 xyz){
-    if (xyz.y > xyz.x + xyz.z) return false;
-    if (xyz.y == 8) return false;
-    return true;
-}
 
-void Realtime::createMap(){
-    for (int z = 0; z < 5; z++){
-        for (int y = 0; y < 9; y++){
-            for (int x = 0; x < 5; x++){
-                if(!mapGeneratingFunction(glm::vec3(x,y,z))) continue;
-                basicMapFile oneCube;
-                glm::vec3 translate = glm::vec3(float(x),float(y),float(z));
-                glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
-                float angle = 0;
-                glm::vec3 scale = glm::vec3(1.f,1.f,1.f);
-                oneCube.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
-                                      * glm::rotate(glm::mat4(1.0f), angle, rotate)
-                                      * glm::scale(glm::mat4(1.0f), scale);
-                oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
-                oneCube.textureID = m_cube_texture;
-                oneCube.vbo = m_cube_vbo;
-                oneCube.vao = m_cube_vao;
-                oneCube.objectType = 0;
-                oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
-                oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
-                oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
-                oneCube.material.shininess = 1;
-                oneCube.material.blend = 1;
-                oneCube.material.textureMap.isUsed = true;
 
-                oneCube.hitboxObj.hitBoxA = translate - glm::vec3(0.5f);  // min bounds
-                oneCube.hitboxObj.hitBoxB = translate + glm::vec3(0.5f);  // max bounds
-                oneCube.hitboxObj.cood = translate;
 
-                m_mapHitbox[x][y][z] = oneCube.hitboxObj;
+// bool Realtime::mapGeneratingFunction(glm::vec3 xyz){
+//     if (xyz.y > xyz.x + xyz.z) return false;
+//     if (xyz.y == 8) return false;
+//     return true;
+// }
 
-                m_allObjects.push_back(oneCube);
-            }
-        }
-    }
-}
+// void Realtime::createMap(){
+//     for (int z = 0; z < 5; z++){
+//         for (int y = 0; y < 9; y++){
+//             for (int x = 0; x < 5; x++){
+//                 if(!mapGeneratingFunction(glm::vec3(x,y,z))) continue;
+//                 basicMapFile oneCube;
+//                 glm::vec3 translate = glm::vec3(float(x),float(y),float(z));
+//                 glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
+//                 float angle = 0;
+//                 glm::vec3 scale = glm::vec3(1.f,1.f,1.f);
+//                 oneCube.modelMatrix = glm::translate(glm::mat4(1.0f), translate)
+//                                       * glm::rotate(glm::mat4(1.0f), angle, rotate)
+//                                       * glm::scale(glm::mat4(1.0f), scale);
+//                 oneCube.inverseModelMatrix = glm::inverse(oneCube.modelMatrix);
+//                 oneCube.textureID = m_cube_texture;
+//                 oneCube.vbo = m_cube_vbo;
+//                 oneCube.vao = m_cube_vao;
+//                 oneCube.objectType = 0;
+//                 oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
+//                 oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
+//                 oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
+//                 oneCube.material.shininess = 1;
+//                 oneCube.material.blend = 1;
+//                 oneCube.material.textureMap.isUsed = true;
+
+//                 oneCube.hitboxObj.hitBoxA = translate - glm::vec3(0.5f);  // min bounds
+//                 oneCube.hitboxObj.hitBoxB = translate + glm::vec3(0.5f);  // max bounds
+//                 oneCube.hitboxObj.cood = translate;
+
+//                 m_mapHitbox[x][y][z] = oneCube.hitboxObj;
+
+//                 m_allObjects.push_back(oneCube);
+//             }
+//         }
+//     }
+// }
 
 void Realtime::createBackground(){
     basicMapFile background;
@@ -175,7 +178,7 @@ void Realtime::createPortal2(){
 }
 void Realtime::createMainCharacter(){
     basicMapFile mainCha;
-    glm::vec3 translate = glm::vec3(float(0),float(0.75),float(0));
+    glm::vec3 translate = glm::vec3(float(0),float(ini_Y),float(0));
     glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
     float angle = 0;
     glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);

@@ -100,6 +100,10 @@ void Realtime::initializeGL() {
     m_timer = startTimer(1000/60);
     m_elapsedTimer.start();
 
+
+
+
+
     // Initializing GL.
     // GLEW (GL Extension Wrangler) provides access to OpenGL functions.
     glewExperimental = GL_TRUE;
@@ -189,13 +193,15 @@ void Realtime::initializeGL() {
     m_portal_texture_image = QImage(filepath4).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_portal_texture, &m_portal_texture_image);
 
-    createMap();
+    createMap2();
     createBackground();
     createDragon();
     createBunny();
     createPortal1();
     createPortal2();
     createMainCharacter();
+
+    worldCood.y =  ini_Y;
 }
 
 void Realtime::paintBasicMap(){
@@ -442,6 +448,9 @@ void Realtime::timerEvent(QTimerEvent *event) {
     float deltaTime = elapsedms * 0.001f;
     m_elapsedTimer.restart();
 
+    // updateVisibleChunks();
+
+
     // Use deltaTime and m_keyMap here to move around
     float movementSpeed = 5.0f;
     glm::vec3 movement(0.0f);
@@ -483,7 +492,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         float newZ = m_mainChaZ + horizontalMovement.z;
 
         // Check X collision
-        float worldY = m_mainChaY + 0.75f;
+        float worldY = m_mainChaY + ini_Y;
         glm::vec3 newPositionCheckX(newX, worldY, m_mainChaZ);
         if (!checkHorizontalCollision(newPositionCheckX, 0.25f)) {
             m_mainChaX = newX;
@@ -503,7 +512,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
         // Check ground collision
-        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.75f, m_mainChaZ);
+        glm::vec3 newPosition(m_mainChaX, m_mainChaY + ini_Y, m_mainChaZ);
         if (isOnGround(newPosition, 0.28f)) {
             if (m_mainChaJumping) {
                 m_mainChaJumping = false;
@@ -534,11 +543,11 @@ void Realtime::timerEvent(QTimerEvent *event) {
             m_mainChaY = 0;
             m_mainChaZ = 0;
         }
-        if (m_mainChaY < 0) {
-            m_mainChaX = 0;
-            m_mainChaY = 0;
-            m_mainChaZ = 0;
-        }
+        // if (m_mainChaY < 0) {
+        //     m_mainChaX = 0;
+        //     m_mainChaY = 0;
+        //     m_mainChaZ = 0;
+        // }
 
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));
         mainCha.modelMatrix = translation * m_mainChaOriginalCTM;

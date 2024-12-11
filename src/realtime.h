@@ -20,6 +20,11 @@
 #include "shapes/Cylinder.h"
 #include "shapes/Cone.h"
 #include "shapes/Mesh.h"
+
+#include <random>
+#include <numeric>
+
+
 //Final Project
 
 struct hitBox{
@@ -189,4 +194,28 @@ private:
                               const glm::vec3& box2Min, const glm::vec3& box2Max);
     glm::vec3 getClosestPointOnBox(const glm::vec3& point,
                                    const glm::vec3& boxMin, const glm::vec3& boxMax);
+
+
+
+
+
+    std::vector<int> m_permutation;
+    glm::ivec2 m_currentChunkCoord;
+
+    // Add these new function declarations
+    void initializeNoise();
+    float fade(float t);
+    float lerp(float t, float a, float b);
+    float grad(int hash, float x, float y, float z);
+    float perlin(float x, float y, float z);
+    float getTerrainHeight(int worldX, int worldZ);
+    void updateVisibleChunks();
+
+    void createMap2();
+    void clearMapHitbox();
+
+    glm::vec3 worldCood {0, 0, 0};
+
+
+    int ini_Y;
 };

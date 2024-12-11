@@ -169,4 +169,6 @@ private:
     bool isOnGround(const glm::vec3& position, float radius);
     bool checkBoxIntersection(const glm::vec3& box1Min, const glm::vec3& box1Max,
                               const glm::vec3& box2Min, const glm::vec3& box2Max);
+    glm::vec3 getClosestPointOnBox(const glm::vec3& point,
+                                   const glm::vec3& boxMin, const glm::vec3& boxMax);
 };

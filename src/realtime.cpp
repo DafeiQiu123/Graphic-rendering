@@ -575,6 +575,11 @@ void Realtime::timerEvent(QTimerEvent *event) {
         }
 
         // Update the sphere's transformation matrix
+        if (m_mainChaY < 0) {
+            m_mainChaX = 0;
+            m_mainChaY = 0;
+            m_mainChaZ = 0;
+        }
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));
         mainCha.modelMatrix = translation * m_mainChaOriginalCTM;
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);

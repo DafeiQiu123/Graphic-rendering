@@ -136,12 +136,15 @@ private:
     GLuint m_fbo_renderbuffer;
 
     // Project 6 extra credit shadowMap
-    std::vector<ShadowMap> m_shadowMaps;
+    GLuint m_shadowMapFBO;
+    GLuint m_shadowMapDepthTexture;
     GLuint m_shadow_shader;
+    glm::mat4 m_lightSpaceMatrix; // To store the light's projection * view matrix
+    // Keep the shadow map resolution constants
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    void renderShadowMap();
-    void passShadowMap();
+    // Updated function declarations
     void makeShadowFBO();
+    void renderShadowMap();
 
     // Final Project
     std::vector<basicMapFile> m_allObjects;
@@ -173,6 +176,8 @@ private:
     float m_mainChaSpeedHorizontal = 5.0f;
     float m_mainChaSpeedVertical = 5.0f;
     glm::mat4 m_mainChaOriginalCTM;
+
+    int dir_index;
 
 
     hitBox m_mapHitbox[5][9][5];

@@ -249,6 +249,7 @@ void Realtime::paintGL() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
+
     // Final Project
     paintBasicMap();
     // Original Drawing for Project 5 and 6
@@ -323,7 +324,7 @@ void Realtime::sceneChanged() {
         const SceneLightData& light = allLights[i];
         GLint typeLoc = glGetUniformLocation(m_shader, ("lightType[" + std::to_string(i) + "]").c_str());
         int lightType;
-        if (light.type == LightType::LIGHT_DIRECTIONAL) lightType = 0;
+        if (light.type == LightType::LIGHT_DIRECTIONAL) {lightType = 0; dir_index = i;}
         if (light.type == LightType::LIGHT_POINT) lightType = 1;
         if (light.type == LightType::LIGHT_SPOT) lightType = 2;
         glUniform1i(typeLoc, lightType);

@@ -1,4 +1,6 @@
 #version 330 core
-void main(){
-    // gl_FragDepth is automatically written, no need to do anything special.
+
+void main() {
+    // Fragment shader remains empty as we only need the depth buffer
+
 }

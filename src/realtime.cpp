@@ -48,9 +48,7 @@ void Realtime::finish() {
     glDeleteBuffers(1, &m_mesh_bunny_vbo);
 
     delete m_sphere;
-    delete m_cone;
     delete m_cube;
-    delete m_cylinder;
     delete m_mesh_dragon;
     delete m_mesh_bunny;
 
@@ -68,19 +66,22 @@ void Realtime::finish() {
         }
     }
 
-    // Project 6 extra credit shadow
-    // glDeleteProgram(m_shadow_shader);
-    // for (auto map : m_shadowMaps){
-    //     glDeleteTextures(1,&map.depthMap);
-    //     glDeleteFramebuffers(1, &map.depthMapFBO);
-    // }
-    // m_shadowMaps.clear();
+    //Project 6 extra credit shadow
+    glDeleteProgram(m_shadow_shader);
+    glDeleteFramebuffers(1, &m_shadowMap.depthMapFBO);
+    glDeleteTextures(1, &m_shadowMap.depthMap);
 
     // Final Project
     glDeleteTextures(1,&m_cube_texture);
     glDeleteTextures(1,&m_mainCha_texture);
     glDeleteTextures(1, &m_background_texture);
     m_allObjects.clear();
+
+    // shadow debug
+    glDeleteVertexArrays(1, &m_debug_quad_vao);
+    glDeleteBuffers(1, &m_debug_quad_vbo);
+    glDeleteProgram(m_debug_shader);
+
     this->doneCurrent();
 }
 
@@ -124,18 +125,12 @@ void Realtime::initializeGL() {
     m_shader = ShaderLoader::createShaderProgram("resources/shaders/default.vert", "resources/shaders/default.frag");
     m_cube = new Cube();
     m_sphere = new Sphere();
-    m_cone = new Cone();
-    m_cylinder = new Cylinder();
 
     glGenVertexArrays(1,&m_cube_vao);
     glGenBuffers(1, &m_cube_vbo);
     glGenVertexArrays(1,&m_sphere_vao);
     glGenBuffers(1, &m_sphere_vbo);
-    glGenVertexArrays(1,&m_cone_vao);
-    glGenBuffers(1, &m_cone_vbo);
-    glGenVertexArrays(1,&m_cylinder_vao);
-    glGenBuffers(1, &m_cylinder_vbo);
-    updateVaoVbo(settings.shapeParameter1, settings.shapeParameter2);
+    updateVaoVbo(1, 1);
 
     // for extra credit mesh rendering
     m_mesh_dragon = new Mesh();
@@ -164,10 +159,6 @@ void Realtime::initializeGL() {
     // set the screen FBO, set postprocess parameters
     screenPostproSetup();
 
-    // Project 6 extra credit shadow
-    // m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
-    // makeShadowFBO();
-
     // Final Project
     std::string filepathString = "asset/bark.png";
     QString filepath = QString(filepathString.c_str());
@@ -175,7 +166,7 @@ void Realtime::initializeGL() {
     m_cube_texture_image = QImage(filepath).convertToFormat(QImage::Format_RGBA8888).mirrored();
     bindTexture(m_cube_texture, &m_cube_texture_image);
 
-    std::string filepathString2 = "asset/liqmtl.png";
+    std::string filepathString2 = "asset/mainCha.png";
     QString filepath2 = QString(filepathString2.c_str());
     std::cout << "update texture " << filepath2.toStdString() << std::endl;
     m_mainCha_texture_image = QImage(filepath2).convertToFormat(QImage::Format_RGBA8888).mirrored();
@@ -200,6 +191,25 @@ void Realtime::initializeGL() {
     createPortal1();
     createPortal2();
     createMainCharacter();
+    // objectType 0: cube map; 1: main character; 2: background; 3: dragon; 4: bunny; 5: portal1; 6: portal2
+    for (size_t i = 0; i < m_allObjects.size(); i++){
+        if (m_allObjects[i].objectType == 1) mainChaIndex = i;
+        if (m_allObjects[i].objectType == 3) dragonIndex = i;
+        if (m_allObjects[i].objectType == 4) bunnyIndex = i;
+        if (m_allObjects[i].objectType == 5) portal1Index = i;
+        if (m_allObjects[i].objectType == 6) portal2Index = i;
+    }
+
+    // Project 6 extra credit shadow
+    m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
+    makeShadowFBO();
+
+    // Debug shadow
+    m_debug_shader = ShaderLoader::createShaderProgram(
+        ":/resources/shaders/debug.vert",
+        ":/resources/shaders/debug.frag"
+        );
+    initDebugQuad();
 
     worldCood.y =  ini_Y;
 }
@@ -229,6 +239,8 @@ void Realtime::paintBasicMap(){
         glBindTexture(GL_TEXTURE_2D, oneCube.textureID);
         GLint samplerLoc = glGetUniformLocation(m_shader, "textureSampler");
         glUniform1i(samplerLoc, 0);
+        GLint shadowOnLoc = glGetUniformLocation(m_shader, "shadow_on");
+        glUniform1i(shadowOnLoc, shadow_on);
         if (oneCube.objectType == 0 || oneCube.objectType == 2 || oneCube.objectType == 5 || oneCube.objectType == 6){
             glBindVertexArray(oneCube.vao);
             glDrawArrays(GL_TRIANGLES,0,m_cube->generateShape().size()/8);
@@ -248,25 +260,39 @@ void Realtime::paintBasicMap(){
 }
 void Realtime::paintGL() {
     // Students: anything requiring OpenGL calls every frame should be done here
-    // Project 6 extra credit shadow mapping, bind the shadowfbo, lights to depthMap;
-    // renderShadowMap();
+
+    // shadow mapping, bind the shadowfbo, lights to depthMap;
+    renderShadowMap();
+
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_fbo_width, m_fbo_height);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
 
     // Final Project
     paintBasicMap();
+
     // Original Drawing for Project 5 and 6
     // paintOriginal();
 
     glUseProgram(0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
     glViewport(0, 0, m_screen_width, m_screen_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     paintTexture(m_fbo_texture);
+
+    // debug shadow
+    // glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+    // glViewport(0, 0, m_screen_width, m_screen_height);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // glUseProgram(m_debug_shader);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, m_shadowMap.depthMap);
+    // glUniform1i(glGetUniformLocation(m_debug_shader, "depthMap"), 0);
+
+    // renderDebugQuad();
 }
 
 void Realtime::resizeGL(int w, int h) {
@@ -292,6 +318,15 @@ void Realtime::resizeGL(int w, int h) {
 
 void Realtime::sceneChanged() {
     makeCurrent();
+    m_mainChaX = 0;
+    m_mainChaY = 0;
+    m_mainChaZ = 0;
+    bunnyTrigger = false;
+    dragonTrigger = false;
+    m_allObjects[dragonIndex].textureID = m_background_texture;
+    m_allObjects[bunnyIndex].textureID = m_background_texture;
+    m_gravity = -9.8f;
+    m_mainChaSpeedHorizontal = 5.0f;
     m_metaData = RenderData();
     bool success = SceneParser::parse(settings.sceneFilePath, m_metaData);
     if (!success) std::cout << "parsing failed";
@@ -323,8 +358,6 @@ void Realtime::sceneChanged() {
     int numLights = std::min(static_cast<int>(allLights.size()), maxLightNumber);
     GLint numLightsLoc = glGetUniformLocation(m_shader, "numLights");
     glUniform1i(numLightsLoc, numLights);
-    // GLint numLightsVLoc = glGetUniformLocation(m_shader, "numLightsV");
-    // glUniform1i(numLightsVLoc, numLights);
 
     for (int i = 0; i < numLights; ++i) {
         const SceneLightData& light = allLights[i];
@@ -353,46 +386,12 @@ void Realtime::sceneChanged() {
 
 void Realtime::settingsChanged() {
     makeCurrent();
-    if (settings.perPixelFilter) {
-        if (m_pixelSwitch == 0) m_postprocess = 1;
-        else if (m_pixelSwitch == 1) m_postprocess = 2;
-        else m_postprocess = 5;
-    }
-    if (settings.kernelBasedFilter) {
-        if (m_kernelSwitch == 0) m_postprocess = 3;
-        else if (m_kernelSwitch == 1) m_postprocess = 4;
-        else m_postprocess = 6;
-    }
-    if (settings.extraCredit1) m_postprocess = 7;
-    if (!settings.perPixelFilter && !settings.kernelBasedFilter && !settings.extraCredit1){
-        m_postprocess = 0;
-    }
-    if (m_previous_postprocess != m_postprocess){
-        std::cout << "current filter: " << m_postprocess << std::endl;
-        m_previous_postprocess = m_postprocess;
-    }
-    if (settings.nearPlane != preNear || settings.farPlane != preFar){
-        if (m_sphere) { // if the m_sphere is nullptr, meaning uninitialized, the update will not work
-            m_camera.updateNearFar(settings.nearPlane,settings.farPlane);
-            glUseProgram(m_shader);
-            glm::mat4 projectionMatrix = m_camera.getProjectionMatrix();
-            GLint projLoc = glGetUniformLocation(m_shader, "projMatrix");
-            glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projectionMatrix[0][0]);
-            glUseProgram(0);
-            preNear = settings.nearPlane;
-            preFar = settings.farPlane;
-            std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-                      << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
-        }
-    }
-    if (settings.shapeParameter1 != preP1 || settings.shapeParameter2 != preP2){
-        if (m_sphere) updateVaoVbo(settings.shapeParameter1,settings.shapeParameter2);
-        preP1 = settings.shapeParameter1;
-        preP2 = settings.shapeParameter2;
-
-        std::cout << "P1: " << settings.shapeParameter1 << " P2: " << settings.shapeParameter2
-                  << " Near: " << settings.nearPlane << " Far: " << settings.farPlane << std::endl;
-    }
+    if (settings.toggle1) m_postprocess = 1;
+    if (settings.toggle2) m_postprocess = 2;
+    if (!settings.toggle1 && !settings.toggle2) m_postprocess = 0;
+    if (m_previous_postprocess != m_postprocess) m_previous_postprocess = m_postprocess;
+    shadow_on = settings.toggle3;
+    developer_on = settings.toggle4;
     update(); // asks for a PaintGL() call to occur
 }
 
@@ -425,7 +424,7 @@ void Realtime::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void Realtime::mouseMoveEvent(QMouseEvent *event) {
-    if (m_mouseDown) {
+    if (m_mouseDown && developer_on) {
         int posX = event->position().x();
         int posY = event->position().y();
         int deltaX = posX - m_prev_mouse_pos.x;
@@ -465,14 +464,16 @@ void Realtime::timerEvent(QTimerEvent *event) {
         movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
         // std::cout<<m_camera.getCameraPos().x<<"===="<<m_camera.getCameraPos().y<<"==="<<m_camera.getCameraPos().z<<"===";
     }
-    m_camera.updateTranslation(movement);
+    if (developer_on) m_camera.updateTranslation(movement);
     glUseProgram(m_shader);
     glm::mat4 viewMatrix = m_camera.getViewMatrix();
     GLint viewLoc = glGetUniformLocation(m_shader, "viewMatrix");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &viewMatrix[0][0]);
     glUseProgram(0);
     if (m_allObjects.size() != 0) {
-        auto& mainCha = m_allObjects.back();
+        if (bunnyTrigger) m_gravity = -4.9f;
+        if (dragonTrigger) m_mainChaSpeedHorizontal = 7.5f;
+        auto& mainCha = m_allObjects[mainChaIndex];
 
         // Handle horizontal movement
         glm::vec3 horizontalMovement(0.0f);
@@ -492,6 +493,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         float newZ = m_mainChaZ + horizontalMovement.z;
 
         // Check X collision
+        float worldY = m_mainChaY + 0.76f;
         float worldY = m_mainChaY + ini_Y;
         glm::vec3 newPositionCheckX(newX, worldY, m_mainChaZ);
         if (!checkHorizontalCollision(newPositionCheckX, 0.25f)) {
@@ -505,13 +507,13 @@ void Realtime::timerEvent(QTimerEvent *event) {
         }
 
         // Handle vertical movement (gravity and jumping)
-        const float gravity = -9.8f;
         if (m_mainChaJumping) {
-            m_mainChaSpeedVertical += gravity * deltaTime;
+            m_mainChaSpeedVertical += m_gravity * deltaTime;
         }
         m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
         // Check ground collision
+       // glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.76f, m_mainChaZ);
         glm::vec3 newPosition(m_mainChaX, m_mainChaY + ini_Y, m_mainChaZ);
         if (isOnGround(newPosition, 0.28f)) {
             if (m_mainChaJumping) {
@@ -519,7 +521,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
             }
             m_mainChaSpeedVertical = 0.0f;
         } else if (!m_mainChaJumping) {
-            m_mainChaSpeedVertical = gravity * deltaTime;
+            m_mainChaSpeedVertical = m_gravity * deltaTime;
             m_mainChaJumping = true;
         }
 
@@ -554,4 +556,31 @@ void Realtime::timerEvent(QTimerEvent *event) {
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
     }
     update(); // asks for a PaintGL() call to occur
+}
+
+void Realtime::initDebugQuad() {
+    // Create a simple quad for debugging
+    float quadVertices[] = {
+        // positions        // texture coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+    glGenVertexArrays(1, &m_debug_quad_vao);
+    glGenBuffers(1, &m_debug_quad_vbo);
+    glBindVertexArray(m_debug_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_debug_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+}
+
+void Realtime::renderDebugQuad() {
+    glBindVertexArray(m_debug_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

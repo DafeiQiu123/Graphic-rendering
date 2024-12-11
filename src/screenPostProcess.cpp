@@ -12,8 +12,6 @@
 
 void Realtime::screenPostproSetup(){
     m_defaultFBO = 2;
-    m_pixelSwitch = 1; // if switch == 0, invert feature; if switch == 1, grayscale feature; if switch == 2, tone mapping feature
-    m_kernelSwitch = 1; // if switch == 0, blur feature; if switch == 1, shapern feature; if switch == 3, edge detect feature
     m_screen_width = size().width() * m_devicePixelRatio;
     m_screen_height = size().height() * m_devicePixelRatio;
     m_fbo_width = m_screen_width;
@@ -57,7 +55,7 @@ void Realtime::makeFBO(){
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_fbo_texture, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_fbo_renderbuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 }
 
 void Realtime::paintTexture(GLuint texture){

@@ -22,10 +22,12 @@ private:
     QCheckBox *toggle1;
     QCheckBox *toggle2;
     QCheckBox *toggle3;
+    QCheckBox *toggle4;
 
 private slots:
     void onUploadFile();
     void onToggle1();
     void onToggle2();
     void onToggle3();
+    void onToggle4();
 };

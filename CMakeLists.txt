@@ -41,8 +41,8 @@ add_executable(${PROJECT_NAME}
 
     src/shapes/Cube.cpp
     src/shapes/Sphere.cpp
-    src/shapes/Cylinder.cpp
-    src/shapes/Cone.cpp
+
+
     src/shapes/Mesh.cpp
 
 
@@ -57,8 +57,8 @@ add_executable(${PROJECT_NAME}
     src/camera/camera.h
     src/shapes/Cube.h
     src/shapes/Sphere.h
-    src/shapes/Cylinder.h
-    src/shapes/Cone.h
+
+
     src/shapes/Mesh.h
     src/collision.cpp
     src/objectPrepare.cpp
@@ -98,6 +98,8 @@ qt6_add_resources(${PROJECT_NAME} "Resources"
         resources/shaders/screen.frag
         resources/shaders/shadow.vert
         resources/shaders/shadow.frag
+        resources/shaders/debug.vert
+        resources/shaders/debug.frag
 )
 
 # GLEW: this provides support for Windows (including 64-bit)

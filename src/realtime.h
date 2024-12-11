@@ -17,8 +17,6 @@
 #include <camera/camera.h>
 #include "shapes/Cube.h"
 #include "shapes/Sphere.h"
-#include "shapes/Cylinder.h"
-#include "shapes/Cone.h"
 #include "shapes/Mesh.h"
 
 #include <random>
@@ -48,7 +46,7 @@ struct basicMapFile{
 struct ShadowMap {
     GLuint depthMapFBO;
     GLuint depthMap;
-    glm::mat4 lightSpaceMatrix;
+    glm::mat4 depthBiasMVP;
 };
 
 class Realtime : public QOpenGLWidget
@@ -94,17 +92,11 @@ private:
 
     Cube* m_cube = nullptr;
     Sphere* m_sphere = nullptr;
-    Cylinder* m_cylinder = nullptr;
-    Cone* m_cone = nullptr;
     GLuint m_shader;
     GLuint m_cube_vbo;
     GLuint m_sphere_vbo;
-    GLuint m_cylinder_vbo;
-    GLuint m_cone_vbo;
     GLuint m_cube_vao;
     GLuint m_sphere_vao;
-    GLuint m_cylinder_vao;
-    GLuint m_cone_vao;
     float preNear = 0.1f;
     float preFar = 100.0f;
     int preP1,preP2 = 5;
@@ -125,7 +117,6 @@ private:
     void makeFBO();
     // Task 30: Update the paintTexture function signature
     void paintTexture(GLuint texture);
-    int m_pixelSwitch, m_kernelSwitch;
     int m_postprocess = 0;
     int m_previous_postprocess = 0;
     GLuint m_defaultFBO;
@@ -141,13 +132,15 @@ private:
     GLuint m_fbo_renderbuffer;
 
     // Project 6 extra credit shadowMap
-    GLuint m_shadowMapFBO;
-    GLuint m_shadowMapDepthTexture;
+    ShadowMap m_shadowMap;
+
     GLuint m_shadow_shader;
     glm::mat4 m_lightSpaceMatrix; // To store the light's projection * view matrix
     // Keep the shadow map resolution constants
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    // Updated function declarations
+    
+    void renderShadowMap();
+
     void makeShadowFBO();
     void renderShadowMap();
 
@@ -171,8 +164,11 @@ private:
     bool mapGeneratingFunction(glm::vec3 xyz);
     void paintBasicMap();
     void createBackground();
-    size_t dragonIndex = 125;
-    size_t bunnyIndex = 126;
+    size_t dragonIndex;
+    size_t bunnyIndex;
+    size_t mainChaIndex;
+    size_t portal1Index;
+    size_t portal2Index;
     bool dragonTrigger = false;
     bool bunnyTrigger = false;
     // main character movement
@@ -180,10 +176,8 @@ private:
     bool m_mainChaJumping = false;
     float m_mainChaSpeedHorizontal = 5.0f;
     float m_mainChaSpeedVertical = 5.0f;
+    float m_gravity = -9.8f;
     glm::mat4 m_mainChaOriginalCTM;
-
-    int dir_index;
-
 
     hitBox m_mapHitbox[5][9][5];
 
@@ -194,6 +188,15 @@ private:
                               const glm::vec3& box2Min, const glm::vec3& box2Max);
     glm::vec3 getClosestPointOnBox(const glm::vec3& point,
                                    const glm::vec3& boxMin, const glm::vec3& boxMax);
+
+
+    GLuint m_debug_shader;
+    GLuint m_debug_quad_vao;
+    GLuint m_debug_quad_vbo;
+    void initDebugQuad();
+    void renderDebugQuad();
+    bool shadow_on = false;
+    bool developer_on = false;
 
 
 

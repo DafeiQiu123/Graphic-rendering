@@ -1,0 +1,110 @@
+{
+  
+  "name": "root",
+  "globalData": {
+    "ambientCoeff": 0.5,
+    "diffuseCoeff": 0.5,
+    "specularCoeff": 0.5,
+    "transparentCoeff": 1
+  },
+  "cameraData": {
+    "position": [
+      -8.2,
+      12.5,
+      -8.2
+    ],
+    "up": [
+      0.36,
+      0.85,
+      0.36
+    ],
+    "heightAngle": 45,
+    "look": [
+      0.6,
+      -0.52,
+      0.6
+    ]
+  },
+  "groups": [
+    {
+      "lights": [
+        {
+          "color": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "type": "point",
+          "attenuationCoeff": [
+            1,
+            0,
+            0
+          ]}
+      ],
+      "translate": [
+        10,
+        10,
+        10
+      ]},
+    {
+      "lights": [
+        {
+          "color": [
+            0.8,
+            0.4,
+            0.8
+          ],
+          "type": "point",
+          "attenuationCoeff": [
+            1,
+            0,
+            0
+          ]}
+      ],
+      "translate": [
+        -2,
+        -2,
+        2
+      ]},
+    {
+      "lights": [
+        {
+          "color": [
+            0.8,
+            0.4,
+            0.8
+          ],
+          "type": "point",
+          "attenuationCoeff": [
+            1,
+            0,
+            0
+          ]}
+      ],
+      "translate": [
+        4,
+        4,
+        4
+      ]},
+    {
+      "lights": [
+        {
+          "color": [
+            0.8,
+            0.4,
+            0.8
+          ],
+          "type": "point",
+          "attenuationCoeff": [
+            1,
+            0,
+            0
+          ]}
+      ],
+      "translate": [
+        -6,
+        -6,
+        -6
+      ]}
+  ]
+}

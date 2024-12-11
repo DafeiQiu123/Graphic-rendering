@@ -20,5 +20,5 @@ void main() {
     fragTexCoord = texCoord;
 
     gl_Position = projMatrix * viewMatrix * vec4(worldPos, 1.0f);
-    ShadowCoord = depthBiasMVP * vec4(objectPos, 1.0);
+    ShadowCoord = depthBiasMVP * modelMatrix * vec4(objectPos, 1.0);
 }

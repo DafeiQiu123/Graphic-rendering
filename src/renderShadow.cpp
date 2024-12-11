@@ -45,28 +45,21 @@ void Realtime::renderShadowMap(){
         const SceneLightData& light = m_metaData.lights[i];
         if (light.type == LightType::LIGHT_DIRECTIONAL) {
             ShadowMap& shadowMap = m_shadowMap;
-            glm::vec3 lightInvDir = -glm::normalize(glm::vec3(light.dir));
-            float orthoSize = 5.0f; // Adjust based on your scene's size
-            float near_plane = 0.1f, far_plane = 20.0f;
+            glm::vec3 lightInvDir = -glm::normalize(glm::vec3(light.dir));;
+            glm::vec3 sceneCenter(0.0f); // Adjust based on your scene
+            float sceneBounds = 5.0f;   // Adjust based on your scene size
             // Compute the MVP matrix from the light's point of view
-            glm::mat4 depthProjectionMatrix = glm::ortho<float>(-orthoSize, orthoSize, -orthoSize, orthoSize, near_plane, far_plane);
-            glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir * orthoSize,
-                                                    glm::vec3(0,0,0),
+            glm::mat4 depthProjectionMatrix = glm::ortho<float>(-sceneBounds, sceneBounds,
+                                                                -sceneBounds, sceneBounds,
+                                                                0.1f, sceneBounds * 2.0f);
+            glm::mat4 depthViewMatrix = glm::lookAt(sceneCenter + lightInvDir * sceneBounds,
+                                                    sceneCenter,
                                                     glm::vec3(0,1,0));
             glm::mat4 depthModelMatrix = glm::mat4(1.0);
 
             glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 
-            // Bias matrix
-            glm::mat4 biasMatrix(
-                0.5, 0.0, 0.0, 0.0,
-                0.0, 0.5, 0.0, 0.0,
-                0.0, 0.0, 0.5, 0.0,
-                0.5, 0.5, 0.5, 1.0
-                );
-
-            glm::mat4 depthBiasMVP = biasMatrix * depthMVP;
-            shadowMap.depthBiasMVP = depthBiasMVP;
+            shadowMap.depthBiasMVP = depthMVP;
 
             glBindFramebuffer(GL_FRAMEBUFFER, shadowMap.depthMapFBO);
             glViewport(0, 0, 1024, 1024);

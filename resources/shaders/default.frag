@@ -39,23 +39,12 @@ uniform sampler2D shadowMap;
 out vec4 fragColor;
 
 bool ShadowCalculation() {
-    // Perform perspective divide
     vec3 projCoords = ShadowCoord.xyz / ShadowCoord.w;
-
-    // Transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
-
-    // Get closest depth value from light's perspective
     float closestDepth = texture(shadowMap, projCoords.xy).r;
-
-    // Get current fragment depth
     float currentDepth = projCoords.z;
-
-    // Add bias to reduce shadow acne
     float bias = 0.005;
-
-    // Check if fragment is in shadow
-    return currentDepth - bias > closestDepth ? true : false;
+    return currentDepth - bias > closestDepth;
 }
 
 void main() {

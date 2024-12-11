@@ -285,6 +285,13 @@ void Realtime::resizeGL(int w, int h) {
 
 void Realtime::sceneChanged() {
     makeCurrent();
+    m_mainChaX = 0;
+    m_mainChaY = 0;
+    m_mainChaZ = 0;
+    bunnyTrigger = false;
+    dragonTrigger = false;
+    m_allObjects[dragonIndex].textureID = m_background_texture;
+    m_allObjects[bunnyIndex].textureID = m_background_texture;
     m_metaData = RenderData();
     bool success = SceneParser::parse(settings.sceneFilePath, m_metaData);
     if (!success) std::cout << "parsing failed";

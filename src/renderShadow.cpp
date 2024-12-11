@@ -116,5 +116,3 @@ void Realtime::renderShadowMap(){
     glBindTexture(GL_TEXTURE_2D, m_shadowMap.depthMap);
     glUniform1i(glGetUniformLocation(m_shader, "shadowMap"), 1);
 }
-
-

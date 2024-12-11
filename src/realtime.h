@@ -18,6 +18,11 @@
 #include "shapes/Cube.h"
 #include "shapes/Sphere.h"
 #include "shapes/Mesh.h"
+
+#include <random>
+#include <numeric>
+
+
 //Final Project
 
 struct hitBox{
@@ -128,10 +133,16 @@ private:
 
     // Project 6 extra credit shadowMap
     ShadowMap m_shadowMap;
+
     GLuint m_shadow_shader;
+    glm::mat4 m_lightSpaceMatrix; // To store the light's projection * view matrix
+    // Keep the shadow map resolution constants
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    
     void renderShadowMap();
+
     void makeShadowFBO();
+    void renderShadowMap();
 
     // Final Project
     std::vector<basicMapFile> m_allObjects;
@@ -167,6 +178,7 @@ private:
     float m_mainChaSpeedVertical = 5.0f;
     float m_gravity = -9.8f;
     glm::mat4 m_mainChaOriginalCTM;
+
     hitBox m_mapHitbox[5][9][5];
 
     void initializeMapLayout();
@@ -177,6 +189,7 @@ private:
     glm::vec3 getClosestPointOnBox(const glm::vec3& point,
                                    const glm::vec3& boxMin, const glm::vec3& boxMax);
 
+
     GLuint m_debug_shader;
     GLuint m_debug_quad_vao;
     GLuint m_debug_quad_vbo;
@@ -185,4 +198,27 @@ private:
     bool shadow_on = false;
     bool developer_on = false;
 
+
+
+
+
+    std::vector<int> m_permutation;
+    glm::ivec2 m_currentChunkCoord;
+
+    // Add these new function declarations
+    void initializeNoise();
+    float fade(float t);
+    float lerp(float t, float a, float b);
+    float grad(int hash, float x, float y, float z);
+    float perlin(float x, float y, float z);
+    float getTerrainHeight(int worldX, int worldZ);
+    void updateVisibleChunks();
+
+    void createMap2();
+    void clearMapHitbox();
+
+    glm::vec3 worldCood {0, 0, 0};
+
+
+    int ini_Y;
 };

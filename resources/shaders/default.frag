@@ -32,8 +32,8 @@ uniform float blend;
 uniform bool isTexture;
 uniform sampler2D textureSampler;
 
-// in vec4 FragPosLightSpace[8];
-// uniform sampler2D shadowMaps[8];
+in vec4 FragPosLightSpace[8];
+uniform sampler2D shadowMaps[8];
 
 out vec4 fragColor;
 
@@ -105,9 +105,15 @@ void main() {
         if (closeness < 0.0f || (closeness == 0.0f && material.shininess <= 0.0f)) powResult = 0.0f;
         else powResult = pow(max(closeness, 0.0f), material.shininess);
         vec3 specularTerm = attenuation * powResult * material.specular * globalData.ks * actualLight;
-        // bool inShadow = ShadowCalculation(FragPosLightSpace[i], shadowMaps[i]);
+        bool inShadow = ShadowCalculation(FragPosLightSpace[i], shadowMaps[i]);
         // if (!inShadow)
-        result += diffuseTerm + specularTerm;
+
+        if (inShadow) {
+            result = specularTerm + diffuseTerm; // Black for shadowed fragments
+        } else {
+            result= vec3(1.0, 1.0, 1.0); // White for lit fragments
+        }
+
     }
     fragColor = vec4(result, 1.0f);
 }

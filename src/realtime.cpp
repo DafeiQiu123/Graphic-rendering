@@ -71,12 +71,12 @@ void Realtime::finish() {
     }
 
     // Project 6 extra credit shadow
-    // glDeleteProgram(m_shadow_shader);
-    // for (auto map : m_shadowMaps){
-    //     glDeleteTextures(1,&map.depthMap);
-    //     glDeleteFramebuffers(1, &map.depthMapFBO);
-    // }
-    // m_shadowMaps.clear();
+    glDeleteProgram(m_shadow_shader);
+    for (auto map : m_shadowMaps){
+        glDeleteTextures(1,&map.depthMap);
+        glDeleteFramebuffers(1, &map.depthMapFBO);
+     }
+    m_shadowMaps.clear();
 
     // Final Project
     glDeleteTextures(1,&m_cube_texture);
@@ -118,7 +118,7 @@ void Realtime::createMap(){
                 oneCube.textureID = m_cube_texture;
                 oneCube.vbo = m_cube_vbo;
                 oneCube.vao = m_cube_vao;
-                oneCube.objectType = 0;
+                oneCube.objectType = 1;
                 oneCube.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
                 oneCube.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
                 oneCube.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
@@ -144,7 +144,7 @@ void Realtime::createBackground(){
     background.textureID = m_background_texture;
     background.vbo = m_cube_vbo;
     background.vao = m_cube_vao;
-    background.objectType = 1;
+    background.objectType = 2;
     background.material.cAmbient = glm::vec4(0.0f);
     background.material.cDiffuse = glm::vec4(0.1,0.1,0.1,0);
     background.material.cSpecular = glm::vec4(0.0f);
@@ -167,7 +167,7 @@ void Realtime::createMainCharacter(){
     mainCha.textureID = m_mainCha_texture;
     mainCha.vbo = m_sphere_vbo;
     mainCha.vao = m_sphere_vao;
-    mainCha.objectType = 1;
+    mainCha.objectType = 3;
     mainCha.material.cAmbient = glm::vec4(0.2,0.2,0.2,0);
     mainCha.material.cDiffuse = glm::vec4(0.5,0.1,0.5,0);
     mainCha.material.cSpecular = glm::vec4(0.5,0.5,0.5,0);
@@ -232,8 +232,8 @@ void Realtime::initializeGL() {
     screenPostproSetup();
 
     // Project 6 extra credit shadow
-    // m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
-    // makeShadowFBO();
+    m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
+    makeShadowFBO();
 
     // Final Project
     std::string filepathString = "asset/bark.png";
@@ -298,7 +298,7 @@ void Realtime::paintBasicMap(){
 void Realtime::paintGL() {
     // Students: anything requiring OpenGL calls every frame should be done here
     // Project 6 extra credit shadow mapping, bind the shadowfbo, lights to depthMap;
-    // renderShadowMap();
+    renderShadowMap();
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_fbo_width, m_fbo_height);
 
@@ -311,7 +311,7 @@ void Realtime::paintGL() {
 
     glUseProgram(0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
     glViewport(0, 0, m_screen_width, m_screen_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     paintTexture(m_fbo_texture);

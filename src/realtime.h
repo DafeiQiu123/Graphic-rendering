@@ -41,7 +41,7 @@ struct basicMapFile{
 struct ShadowMap {
     GLuint depthMapFBO;
     GLuint depthMap;
-    glm::mat4 lightSpaceMatrix;
+    glm::mat4 depthBiasMVP;
 };
 
 class Realtime : public QOpenGLWidget
@@ -127,11 +127,10 @@ private:
     GLuint m_fbo_renderbuffer;
 
     // Project 6 extra credit shadowMap
-    std::vector<ShadowMap> m_shadowMaps;
+    ShadowMap m_shadowMap;
     GLuint m_shadow_shader;
     const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
     void renderShadowMap();
-    void passShadowMap();
     void makeShadowFBO();
 
     // Final Project
@@ -177,4 +176,11 @@ private:
                               const glm::vec3& box2Min, const glm::vec3& box2Max);
     glm::vec3 getClosestPointOnBox(const glm::vec3& point,
                                    const glm::vec3& boxMin, const glm::vec3& boxMax);
+
+    GLuint m_debug_shader;
+    GLuint m_debug_quad_vao;
+    GLuint m_debug_quad_vbo;
+    void initDebugQuad();
+    void renderDebugQuad();
+
 };

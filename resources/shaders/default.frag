@@ -12,9 +12,10 @@ struct Material {
     float shininess;
 };
 
-in vec3 worldNormal;
 in vec3 worldPos;
+in vec3 worldNormal;
 in vec2 fragTexCoord;
+in vec4 ShadowCoord;
 
 uniform GlobalData globalData;
 uniform Material material;
@@ -32,29 +33,28 @@ uniform float blend;
 uniform bool isTexture;
 uniform sampler2D textureSampler;
 
-// in vec4 FragPosLightSpace;
-// uniform sampler2D shadowMaps;
+uniform sampler2D shadowMap;
 
 out vec4 fragColor;
 
-bool ShadowCalculation(vec4 fragPosLightSpace, sampler2D shadowMap) {
+bool ShadowCalculation() {
     // Perform perspective divide
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    vec3 projCoords = ShadowCoord.xyz / ShadowCoord.w;
+
     // Transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
 
-    // Check if fragment is outside the light's frustum
-    if (projCoords.z > 1.0)
-        return false;
-
     // Get closest depth value from light's perspective
     float closestDepth = texture(shadowMap, projCoords.xy).r;
-    // Get depth of current fragment from light's perspective
+
+    // Get current fragment depth
     float currentDepth = projCoords.z;
 
-    // Determine if fragment is in shadow
-    bool inShadow = currentDepth > closestDepth;
-    return inShadow;
+    // Add bias to reduce shadow acne
+    float bias = 0.005;
+
+    // Check if fragment is in shadow
+    return currentDepth - bias > closestDepth ? true : false;
 }
 
 void main() {
@@ -105,9 +105,12 @@ void main() {
         if (closeness < 0.0f || (closeness == 0.0f && material.shininess <= 0.0f)) powResult = 0.0f;
         else powResult = pow(max(closeness, 0.0f), material.shininess);
         vec3 specularTerm = attenuation * powResult * material.specular * globalData.ks * actualLight;
-        // bool inShadow = ShadowCalculation(FragPosLightSpace[i], shadowMaps[i]);
-        // if (!inShadow)
-        result += diffuseTerm + specularTerm;
+        if (lightType[i] == 0) {
+            bool inShadow = ShadowCalculation();
+            if (!inShadow) result += diffuseTerm + specularTerm;
+        } else {
+            result += diffuseTerm + specularTerm;
+        }
     }
     fragColor = vec4(result, 1.0f);
 }

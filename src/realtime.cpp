@@ -66,13 +66,10 @@ void Realtime::finish() {
         }
     }
 
-    // Project 6 extra credit shadow
-    // glDeleteProgram(m_shadow_shader);
-    // for (auto map : m_shadowMaps){
-    //     glDeleteTextures(1,&map.depthMap);
-    //     glDeleteFramebuffers(1, &map.depthMapFBO);
-    // }
-    // m_shadowMaps.clear();
+    //Project 6 extra credit shadow
+    glDeleteProgram(m_shadow_shader);
+    glDeleteFramebuffers(1, &m_shadowMap.depthMapFBO);
+    glDeleteTextures(1, &m_shadowMap.depthMap);
 
     // Final Project
     glDeleteTextures(1,&m_cube_texture);
@@ -123,7 +120,7 @@ void Realtime::initializeGL() {
     glGenBuffers(1, &m_cube_vbo);
     glGenVertexArrays(1,&m_sphere_vao);
     glGenBuffers(1, &m_sphere_vbo);
-    updateVaoVbo(settings.shapeParameter1, settings.shapeParameter2);
+    updateVaoVbo(1, 1);
 
     // for extra credit mesh rendering
     m_mesh_dragon = new Mesh();
@@ -151,10 +148,6 @@ void Realtime::initializeGL() {
     // project 6 action
     // set the screen FBO, set postprocess parameters
     screenPostproSetup();
-
-    // Project 6 extra credit shadow
-    // m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
-    // makeShadowFBO();
 
     // Final Project
     std::string filepathString = "asset/bark.png";
@@ -196,6 +189,17 @@ void Realtime::initializeGL() {
         if (m_allObjects[i].objectType == 5) portal1Index = i;
         if (m_allObjects[i].objectType == 6) portal2Index = i;
     }
+
+    // Project 6 extra credit shadow
+    m_shadow_shader = ShaderLoader::createShaderProgram(":/resources/shaders/shadow.vert", ":/resources/shaders/shadow.frag");
+    makeShadowFBO();
+
+    // Debug shadow
+    m_debug_shader = ShaderLoader::createShaderProgram(
+        ":/resources/shaders/debug.vert",
+        ":/resources/shaders/debug.frag"
+        );
+    initDebugQuad();
 }
 
 void Realtime::paintBasicMap(){
@@ -243,7 +247,7 @@ void Realtime::paintBasicMap(){
 void Realtime::paintGL() {
     // Students: anything requiring OpenGL calls every frame should be done here
     // Project 6 extra credit shadow mapping, bind the shadowfbo, lights to depthMap;
-    // renderShadowMap();
+    renderShadowMap();
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_fbo_width, m_fbo_height);
 
@@ -251,12 +255,13 @@ void Realtime::paintGL() {
     glUseProgram(m_shader);
     // Final Project
     paintBasicMap();
+
     // Original Drawing for Project 5 and 6
     // paintOriginal();
 
     glUseProgram(0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
     glViewport(0, 0, m_screen_width, m_screen_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     paintTexture(m_fbo_texture);
@@ -526,4 +531,31 @@ void Realtime::timerEvent(QTimerEvent *event) {
         mainCha.inverseModelMatrix = glm::inverse(mainCha.modelMatrix);
     }
     update(); // asks for a PaintGL() call to occur
+}
+
+void Realtime::initDebugQuad() {
+    // Create a simple quad for debugging
+    float quadVertices[] = {
+        // positions        // texture coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+    glGenVertexArrays(1, &m_debug_quad_vao);
+    glGenBuffers(1, &m_debug_quad_vbo);
+    glBindVertexArray(m_debug_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_debug_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+}
+
+void Realtime::renderDebugQuad() {
+    glBindVertexArray(m_debug_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

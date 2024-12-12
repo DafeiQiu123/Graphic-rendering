@@ -317,11 +317,33 @@ void Realtime::sceneChanged() {
     m_mainChaZ = 0;
     bunnyTrigger = false;
     dragonTrigger = false;
+    phase2 = 0;
     m_allObjects[dragonIndex].textureID = m_background_texture;
     m_allObjects[bunnyIndex].textureID = m_background_texture;
     m_gravity = -9.8f;
     m_mainChaSpeedHorizontal = 5.0f;
     m_metaData = RenderData();
+
+
+    m_allObjects.clear();
+    clearMapHitbox();
+    createMap();
+    createBackground();
+    createDragon();
+    createBunny();
+    createPortal1();
+    createPortal2();
+    createMainCharacter();
+    // objectType 0: cube map; 1: main character; 2: background; 3: dragon; 4: bunny; 5: portal1; 6: portal2
+    for (size_t i = 0; i < m_allObjects.size(); i++){
+        if (m_allObjects[i].objectType == 1) mainChaIndex = i;
+        if (m_allObjects[i].objectType == 3) dragonIndex = i;
+        if (m_allObjects[i].objectType == 4) bunnyIndex = i;
+        if (m_allObjects[i].objectType == 5) portal1Index = i;
+        if (m_allObjects[i].objectType == 6) portal2Index = i;
+    }
+
+
     bool success = SceneParser::parse(settings.sceneFilePath, m_metaData);
     if (!success) std::cout << "parsing failed";
     m_camera = Camera(m_metaData.cameraData,width(),height());
@@ -441,9 +463,6 @@ void Realtime::timerEvent(QTimerEvent *event) {
     float deltaTime = elapsedms * 0.001f;
     m_elapsedTimer.restart();
 
-    // updateVisibleChunks();
-
-
     // Use deltaTime and m_keyMap here to move around
     float movementSpeed = 5.0f;
     glm::vec3 movement(0.0f);
@@ -456,7 +475,6 @@ void Realtime::timerEvent(QTimerEvent *event) {
     if (m_keyMap[Qt::Key_Space]) movement += glm::vec3(0.f,1.f,0.f) * movementSpeed * deltaTime;
     if (m_keyMap[Qt::Key_Control]){
         movement += glm::vec3(0.f,-1.f,0.f) * movementSpeed * deltaTime;
-        // std::cout<<m_camera.getCameraPos().x<<"===="<<m_camera.getCameraPos().y<<"==="<<m_camera.getCameraPos().z<<"===";
     }
     if (developer_on) m_camera.updateTranslation(movement);
     glUseProgram(m_shader);
@@ -469,16 +487,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         if (dragonTrigger) m_mainChaSpeedHorizontal = 7.5f;
         auto& mainCha = m_allObjects[mainChaIndex];
 
-        if (phase2 == 2){
-            // for (auto it = m_allObjects.begin(); it != m_allObjects.end(); ) {
-            //     if (it->objectType != 1 && it->objectType != 2) {
-            //         // Erase the element and update the iterator
-            //         it = m_allObjects.erase(it);
-            //     } else {
-            //         // Move to the next element if this one is not erased
-            //         ++it;
-            //     }
-            // }
+        if (phase2 == 3){
 
             m_allObjects.clear();
             initializeNoise();
@@ -522,7 +531,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
         float newZ = m_mainChaZ + horizontalMovement.z;
 
         // Check X collision
-        if (phase2 < 2)
+        if (phase2 < 3)
             worldY = m_mainChaY + 0.76f;
         else
             worldY = m_mainChaY + ini_Y;
@@ -546,7 +555,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
 
         // Check ground collision
         glm::vec3 newPosition;
-        if (phase2 < 2)
+        if (phase2 < 3)
             newPosition = {m_mainChaX, m_mainChaY + 0.76f, m_mainChaZ};
         else
             newPosition = {m_mainChaX, m_mainChaY + ini_Y, m_mainChaZ};
@@ -560,9 +569,8 @@ void Realtime::timerEvent(QTimerEvent *event) {
             m_mainChaJumping = true;
         }
 
-        //std::cout << m_mainChaX << " " << m_mainChaY << " " << m_mainChaZ << std::endl;
         // Update the sphere's transformation matrix
-        if(phase2 < 2){
+        if(phase2 < 3){
             if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
                 m_mainChaZ >= 2.5 && m_mainChaZ <= 3.5 &&
                 m_mainChaX >= 4.5){
@@ -592,7 +600,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
             }
         }
 
-        if(phase2 > 2) {
+        if(phase2 > 3) {
             if (horizontalMovement.x != 0 || horizontalMovement.z != 0) {
                 updateWorldPosition(horizontalMovement.x, horizontalMovement.z);
             }

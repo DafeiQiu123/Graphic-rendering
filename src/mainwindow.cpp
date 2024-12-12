@@ -79,5 +79,5 @@ void MainWindow::onToggle4() {
     // Invert or set the setting based on toggle state
     settings.toggle4 = toggle4->isChecked();
     realtime->settingsChanged();
-    std::cout << "Cool Edge: " << (settings.toggle4 ? "ON" : "OFF") << std::endl;
+    std::cout << "Developer Mode on: " << (settings.toggle4 ? "ON" : "OFF") << std::endl;
 }

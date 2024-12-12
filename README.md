@@ -21,6 +21,8 @@ Collision Detection - Yifan Sun
 
 Random Map Generation (the Land of Nowhere) - Yifan Sun
 
+FXAA - Yifan Sun
+
 Game Design - Yuehuan Qiu
 
 Scene Generation - Yuehuan Qiu
@@ -33,11 +35,14 @@ Shadow Mapping - Yuehuan Qiu
 
 FXAA and Edge Filter - Yuehuan Qiu
 
-Game Design - Yuehuan Qiu
 
 ## Basic Outline & Data Structure
 
 Load light data and camera data from root json file, generate objects as basicMapFile class and stored them in m_allobjects. BasicMapFile contain modelMatrix, objectType, vbo, vao, textureID, material, hitbox. 
+
+## Known Bugs
+
+Bug with collision detection: the main character might stuck on the cubes map wall or stand on edge of the cubes map where the bottom of the sphere in not on ground because we used a cube bounding box for sphere (main character) for simple logic. We haven't fixed it since it effects the whole logic and encountering such bug is a rare edge case; when encountered during rendering, simply press jumping.
 
 ## Demo
 ![Demo Video](asset/demo.mp4)

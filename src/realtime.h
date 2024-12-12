@@ -185,4 +185,61 @@ private:
     bool shadow_on = false;
     bool developer_on = false;
 
+    std::vector<int> m_permutation;
+    glm::ivec2 m_currentChunkCoord;
+
+    // Add these new function declarations
+    void initializeNoise();
+    float fade(float t);
+    float lerp(float t, float a, float b);
+    float grad(int hash, float x, float y, float z);
+    float perlin(float x, float y, float z);
+    float getTerrainHeight(int worldX, int worldZ);
+
+    void updateWorldPosition(float deltaX, float deltaZ);
+    void createMap2(int chunkX, int chunkZ);
+    void clearMapHitbox();
+    void handleChunkTransition(const glm::vec3& newWorldPos);
+
+    glm::vec3 worldCood {0, 0, 0};
+    glm::vec2 chunkCood {0, 0};
+
+
+    float ini_Y;
+    // int phase2=2;
+    int phase2=0;
+
+    struct ChunkCoord {
+        int x;
+        int z;
+
+        bool operator==(const ChunkCoord& other) const {
+            return x == other.x && z == other.z;
+        }
+
+        bool operator!=(const ChunkCoord& other) const {
+            return !(*this == other);
+        }
+    };
+
+    const float CHUNK_SIZE_X = 5.0f;
+    const float CHUNK_SIZE_Z = 5.0f;
+    const float CHUNK_OFFSET = -0.5f;
+
+    ChunkCoord calculateChunkCoord(const glm::vec3& worldPos) {
+        ChunkCoord chunk;
+        // Subtract offset and divide by chunk size to get chunk coordinates
+        chunk.x = static_cast<int>(floor((worldPos.x - CHUNK_OFFSET) / CHUNK_SIZE_X));
+        chunk.z = static_cast<int>(floor((worldPos.z - CHUNK_OFFSET) / CHUNK_SIZE_Z));
+        return chunk;
+    }
+
+    glm::vec3 getChunkOrigin(const ChunkCoord& chunk) {
+        return glm::vec3(
+            chunk.x * CHUNK_SIZE_X + CHUNK_OFFSET,
+            0.0f,  // Y coordinate remains unchanged
+            chunk.z * CHUNK_SIZE_Z + CHUNK_OFFSET
+            );
+    }
+
 };

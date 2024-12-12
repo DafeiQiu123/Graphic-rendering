@@ -173,7 +173,9 @@ void Realtime::createPortal2(){
 }
 void Realtime::createMainCharacter(){
     basicMapFile mainCha;
-    glm::vec3 translate = glm::vec3(float(0),float(0.76),float(0));
+    glm::vec3 translate;
+    if (phase2 < 2) translate = glm::vec3(float(0),float(0.76),float(0));
+    else translate = glm::vec3(float(0),float(ini_Y),float(0));
     glm::vec3 rotate = glm::vec3(0.f,1.f,0.f);
     float angle = 0;
     glm::vec3 scale = glm::vec3(0.5f,0.5f,0.5f);

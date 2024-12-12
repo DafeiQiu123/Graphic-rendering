@@ -441,6 +441,9 @@ void Realtime::timerEvent(QTimerEvent *event) {
     float deltaTime = elapsedms * 0.001f;
     m_elapsedTimer.restart();
 
+    // updateVisibleChunks();
+
+
     // Use deltaTime and m_keyMap here to move around
     float movementSpeed = 5.0f;
     glm::vec3 movement(0.0f);
@@ -466,6 +469,40 @@ void Realtime::timerEvent(QTimerEvent *event) {
         if (dragonTrigger) m_mainChaSpeedHorizontal = 7.5f;
         auto& mainCha = m_allObjects[mainChaIndex];
 
+        if (phase2 == 2){
+            // for (auto it = m_allObjects.begin(); it != m_allObjects.end(); ) {
+            //     if (it->objectType != 1 && it->objectType != 2) {
+            //         // Erase the element and update the iterator
+            //         it = m_allObjects.erase(it);
+            //     } else {
+            //         // Move to the next element if this one is not erased
+            //         ++it;
+            //     }
+            // }
+
+            m_allObjects.clear();
+            initializeNoise();
+            createMap2(0, 0);
+            createBackground();
+            createMainCharacter();
+
+
+            for (size_t kkk = 0; kkk < m_allObjects.size(); kkk++){
+                if (m_allObjects[kkk].objectType == 1) mainChaIndex = kkk;
+            }
+
+            std::cout<< ini_Y<<"";
+            m_mainChaY = 0;
+            m_mainChaZ = 0;
+            m_mainChaX = 0;
+
+            worldCood.x = 0;
+            worldCood.z = 0;
+            worldCood.y = ini_Y;
+
+            phase2 ++;
+        }
+
         // Handle horizontal movement
         glm::vec3 horizontalMovement(0.0f);
         if (m_keyMap[Qt::Key_I]) horizontalMovement.z += 1.0f; // Forward
@@ -479,12 +516,17 @@ void Realtime::timerEvent(QTimerEvent *event) {
             horizontalMovement *= m_mainChaSpeedHorizontal * deltaTime;
         }
 
+        float worldY;
         // Try horizontal movement
         float newX = m_mainChaX + horizontalMovement.x;
         float newZ = m_mainChaZ + horizontalMovement.z;
 
         // Check X collision
-        float worldY = m_mainChaY + 0.76f;
+        if (phase2 < 2)
+            worldY = m_mainChaY + 0.76f;
+        else
+            worldY = m_mainChaY + ini_Y;
+
         glm::vec3 newPositionCheckX(newX, worldY, m_mainChaZ);
         if (!checkHorizontalCollision(newPositionCheckX, 0.25f)) {
             m_mainChaX = newX;
@@ -503,8 +545,12 @@ void Realtime::timerEvent(QTimerEvent *event) {
         m_mainChaY += m_mainChaSpeedVertical * deltaTime;
 
         // Check ground collision
-        glm::vec3 newPosition(m_mainChaX, m_mainChaY + 0.76f, m_mainChaZ);
-        if (isOnGround(newPosition, 0.28f)) {
+        glm::vec3 newPosition;
+        if (phase2 < 2)
+            newPosition = {m_mainChaX, m_mainChaY + 0.76f, m_mainChaZ};
+        else
+            newPosition = {m_mainChaX, m_mainChaY + ini_Y, m_mainChaZ};
+        if (isOnGround(newPosition, 0.25f)) {
             if (m_mainChaJumping) {
                 m_mainChaJumping = false;
             }
@@ -516,28 +562,41 @@ void Realtime::timerEvent(QTimerEvent *event) {
 
         //std::cout << m_mainChaX << " " << m_mainChaY << " " << m_mainChaZ << std::endl;
         // Update the sphere's transformation matrix
-        if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
-            m_mainChaZ >= 2.5 && m_mainChaZ <= 3.5 &&
-            m_mainChaX >= 4.5){
-            m_allObjects[dragonIndex].textureID = m_cube_texture;
-            dragonTrigger = true;
-            m_mainChaX = 0;
-            m_mainChaY = 0;
-            m_mainChaZ = 0;
+        if(phase2 < 2){
+            if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
+                m_mainChaZ >= 2.5 && m_mainChaZ <= 3.5 &&
+                m_mainChaX >= 4.5){
+                m_allObjects[dragonIndex].textureID = m_cube_texture;
+                dragonTrigger = true;
+                m_mainChaX = 0;
+                m_mainChaY = 0;
+                m_mainChaZ = 0;
+
+                phase2 ++;
+            }
+            if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
+                m_mainChaX >= 2.5 && m_mainChaX <= 3.5 &&
+                m_mainChaZ >= 4.5){
+                m_allObjects[bunnyIndex].textureID = m_cube_texture;
+                bunnyTrigger = true;
+                m_mainChaX = 0;
+                m_mainChaY = 0;
+                m_mainChaZ = 0;
+
+                phase2 ++;
+            }
+            if (m_mainChaY < 0) {
+                m_mainChaX = 0;
+                m_mainChaY = 0;
+                m_mainChaZ = 0;
+            }
         }
-        if (m_mainChaY >= 7.25 && m_mainChaY <= 8.25 &&
-            m_mainChaX >= 2.5 && m_mainChaX <= 3.5 &&
-            m_mainChaZ >= 4.5){
-            m_allObjects[bunnyIndex].textureID = m_cube_texture;
-            bunnyTrigger = true;
-            m_mainChaX = 0;
-            m_mainChaY = 0;
-            m_mainChaZ = 0;
-        }
-        if (m_mainChaY < 0) {
-            m_mainChaX = 0;
-            m_mainChaY = 0;
-            m_mainChaZ = 0;
+
+        if(phase2 > 2) {
+            if (horizontalMovement.x != 0 || horizontalMovement.z != 0) {
+                updateWorldPosition(horizontalMovement.x, horizontalMovement.z);
+            }
+
         }
 
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(m_mainChaX, m_mainChaY, m_mainChaZ));

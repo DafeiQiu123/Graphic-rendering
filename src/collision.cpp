@@ -1,6 +1,6 @@
 #include <realtime.h>
 
-bool Realtime::checkHorizontalCollision(const glm::vec3 &position, float radius) {
+    bool Realtime::checkHorizontalCollision(const glm::vec3 &position, float radius) {
     // Compute the character's bounding box with adjusted vertical size
     glm::vec3 charMin = position - glm::vec3(radius, radius * 0.8f, radius);
     glm::vec3 charMax = position + glm::vec3(radius, radius * 0.8f, radius);

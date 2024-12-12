@@ -62,6 +62,7 @@ add_executable(${PROJECT_NAME}
     src/shapes/Mesh.h
     src/collision.cpp
     src/objectPrepare.cpp
+    src/chunk.cpp
 
 
 
